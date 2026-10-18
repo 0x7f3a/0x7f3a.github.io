@@ -837,6 +837,75 @@
         }
       }
 
+      /* ── Fake shell (Terminal view) ───────────────────── */
+      .sh {
+        background: var(--accent);
+        border-radius: var(--radius);
+        border-top: 2px solid rgba(200, 169, 110, 0.6);
+        padding: 14px 16px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: #d8d8e0;
+        height: min(440px, 62vh);
+        overflow-y: auto;
+        cursor: text;
+      }
+      .sh::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sh::-webkit-scrollbar-thumb {
+        background: rgba(200, 169, 110, 0.4);
+        border-radius: 3px;
+      }
+      .sh pre {
+        font: inherit;
+        margin: 0;
+      }
+      .sh-line {
+        white-space: pre-wrap;
+        word-break: break-word;
+        min-height: 1.6em;
+      }
+      .sh-row {
+        display: flex;
+        gap: 8px;
+      }
+      .sh-p {
+        color: var(--gold);
+        flex-shrink: 0;
+        white-space: pre;
+      }
+      .sh-p.root {
+        color: #e06c75;
+      }
+      .sh-in {
+        flex: 1;
+        min-width: 0;
+        background: none;
+        border: none;
+        outline: none;
+        color: #eceaf4;
+        font: inherit;
+        caret-color: var(--gold);
+      }
+      .ff {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 24px;
+        margin: 6px 0;
+      }
+      .ff pre {
+        overflow-x: auto;
+        max-width: 100%;
+      }
+      .ff-art {
+        color: var(--gold);
+      }
+      .ff-k {
+        color: var(--gold);
+      }
+
       .footer {
         margin-top: 2rem;
         padding-top: 1.25rem;
@@ -947,6 +1016,7 @@
         <a href="#writeups">writeups</a>
         <a href="#achievements">achievements</a>
         <a href="#timeline">timeline</a>
+        <a href="#terminal">terminal</a>
       </nav>
 
       <div class="brand">
@@ -1123,6 +1193,31 @@
           </div>
           <div class="tl-hint"># click a year to expand</div>
           <div id="tl-items"></div>
+        </div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
+      <!-- ───────── TERMINAL ───────── -->
+      <section class="view" id="view-terminal" hidden>
+        <h2 class="view-title">Terminal</h2>
+        <p class="view-sub">
+          A fake shell running PenguinOS. Type help to get started.
+        </p>
+        <div class="sh" id="shBox">
+          <div id="shOut"></div>
+          <div class="sh-row">
+            <span class="sh-p" id="shPrompt"></span>
+            <input
+              class="sh-in"
+              id="shIn"
+              type="text"
+              aria-label="Terminal input"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+          </div>
         </div>
         <button class="back" data-go="home">&lt; back to profile</button>
       </section>
@@ -1952,6 +2047,7 @@
         "writeups",
         "achievements",
         "timeline",
+        "terminal",
       ];
       const TAGLINES = {
         home: "Access Log \u00B7 Public Profile",
@@ -1959,6 +2055,7 @@
         writeups: "Access Log \u00B7 Writeups",
         achievements: "Access Log \u00B7 Achievements",
         timeline: "Access Log \u00B7 Timeline",
+        terminal: "Access Log \u00B7 Terminal",
       };
 
       function renderList(id, items, emptyMsg) {
@@ -2182,6 +2279,388 @@
         select(items.length - 1, false); // start on the latest entry
       })();
 
+      /* ════════ FAKE TERMINAL (PenguinOS) ════════ */
+      (function () {
+        const box = document.getElementById("shBox"),
+          out = document.getElementById("shOut"),
+          inp = document.getElementById("shIn"),
+          pEl = document.getElementById("shPrompt");
+        const USER = "0x7f3a",
+          HOST = "penguinos",
+          HOME = "/home/" + USER;
+        let root = false,
+          cwd = HOME,
+          hist = [],
+          hi = 0;
+
+        const FS = {
+          "/": {},
+          "/bin": {},
+          "/usr": {},
+          "/var": {},
+          "/tmp": {},
+          "/home": {},
+          [HOME]: {
+            "flag.txt": "flag{y0u_f0und_m3_0x7f3a}",
+            "notes.txt":
+              "todo: own the next KoTH box\nrule #1: never reuse a shell",
+            "README.md": "Welcome to PenguinOS. Try: help",
+          },
+          "/root": {
+            "king.txt": "0x7f3a",
+            "root.txt": "flag{r00t_0n_p3ngu1n_0s}",
+          },
+          "/etc": {
+            hostname: HOST,
+            "os-release":
+              'NAME="PenguinOS"\nVERSION="1.0 (Arctic)"\nID=penguinos\nID_LIKE=debian\nPRETTY_NAME="PenguinOS 1.0 (Arctic)"',
+          },
+        };
+
+        const ART = [
+          "        .---.",
+          "       /     \\",
+          "       \\.@-@./",
+          "       /`\\_/`\\",
+          "      //  _  \\\\",
+          "     | \\     )|_",
+          "    /`\\_`>  <_/ \\",
+          "    \\__/'---'\\__/",
+        ];
+
+        const HELP = [
+          "PenguinOS shell, version 1.0.0(1)-release",
+          "",
+          "  help          show this message",
+          "  fastfetch     system information",
+          "  whoami / id   who am i",
+          "  sudo su       become root",
+          "  exit          drop back to the normal user",
+          "  ls cd pwd cat file basics",
+          "  echo date uname uptime hostname history clear",
+        ].join("\n");
+
+        const CMDS = Object.create(null);
+
+        const homeDir = () => (root ? "/root" : HOME);
+        const isHome = (p) => p === homeDir();
+        function shown() {
+          const h = homeDir();
+          if (cwd === h) return "~";
+          return cwd.startsWith(h + "/") ? "~" + cwd.slice(h.length) : cwd;
+        }
+        const promptStr = () =>
+          (root ? "root" : USER) +
+          "@" +
+          HOST +
+          ":" +
+          shown() +
+          (root ? "#" : "$");
+        function upd() {
+          pEl.textContent = promptStr();
+          pEl.classList.toggle("root", root);
+        }
+        function resolve(p) {
+          if (p === "~" || p.startsWith("~/")) p = homeDir() + p.slice(1);
+          if (!p.startsWith("/")) p = cwd + "/" + p;
+          const st = [];
+          p.split("/").forEach((s) => {
+            if (!s || s === ".") return;
+            if (s === "..") st.pop();
+            else st.push(s);
+          });
+          return "/" + st.join("/");
+        }
+        const denied = (p) =>
+          !root && (p === "/root" || p.startsWith("/root/"));
+        const parentOf = (p) => p.slice(0, p.lastIndexOf("/")) || "/";
+
+        function print(t, cls) {
+          const d = document.createElement("div");
+          d.className = "sh-line" + (cls ? " " + cls : "");
+          d.textContent = t;
+          out.appendChild(d);
+        }
+        function echo(text) {
+          const row = document.createElement("div");
+          row.className = "sh-line";
+          const p = document.createElement("span");
+          p.className = "sh-p" + (root ? " root" : "");
+          p.textContent = promptStr() + " ";
+          const t = document.createElement("span");
+          t.textContent = text;
+          row.append(p, t);
+          out.appendChild(row);
+        }
+
+        CMDS.help = () => print(HELP);
+        CMDS.whoami = () => print(root ? "uid=0(root)" : "uid=1000(0x7f3a)");
+        CMDS.id = () =>
+          print(
+            root
+              ? "uid=0(root) gid=0(root) groups=0(root)"
+              : "uid=1000(0x7f3a) gid=1000(0x7f3a) groups=1000(0x7f3a),27(sudo),100(users)",
+          );
+        CMDS.pwd = () => print(cwd);
+        CMDS.hostname = () => print(HOST);
+        CMDS.echo = (a) => print(a.join(" "));
+        CMDS.date = () => print(new Date().toString());
+        CMDS.clear = () => (out.textContent = "");
+        CMDS.history = () =>
+          print(
+            hist.map((h, i) => String(i + 1).padStart(5) + "  " + h).join("\n"),
+          );
+        CMDS.uptime = () =>
+          print(
+            " " +
+              new Date().toTimeString().slice(0, 8) +
+              " up 12 days,  4:37,  1 user,  load average: 0.08, 0.03, 0.01",
+          );
+        CMDS.uname = (a) => {
+          const f = a.join(" ");
+          print(
+            /-a/.test(f)
+              ? "Linux penguinos 6.8.0-penguin #1 SMP PREEMPT_DYNAMIC Fri Oct 16 09:12:44 UTC 2026 x86_64 GNU/Linux"
+              : /-r/.test(f)
+                ? "6.8.0-penguin"
+                : /-m/.test(f)
+                  ? "x86_64"
+                  : "Linux",
+          );
+        };
+
+        CMDS.cd = (a) => {
+          if (!a.length) return void (cwd = homeDir());
+          const t = resolve(a[0]);
+          if (denied(t))
+            return print("bash: cd: " + a[0] + ": Permission denied");
+          if (FS[t]) cwd = t;
+          else print("bash: cd: " + a[0] + ": No such file or directory");
+        };
+
+        CMDS.ls = (a) => {
+          const flags = a.filter((x) => x[0] === "-").join("");
+          const arg = a.find((x) => x[0] !== "-");
+          const t = arg ? resolve(arg) : cwd;
+          if (denied(t))
+            return print(
+              "ls: cannot open directory '" + arg + "': Permission denied",
+            );
+          if (!FS[t])
+            return print(
+              "ls: cannot access '" + arg + "': No such file or directory",
+            );
+          const dirs = Object.keys(FS)
+            .filter((d) => d !== "/" && parentOf(d) === t)
+            .map((d) => d.slice(d.lastIndexOf("/") + 1));
+          const files = Object.keys(FS[t]);
+          let names = [...dirs, ...files].sort();
+          if (/a/.test(flags)) names = [".", "..", ...names];
+          if (/l/.test(flags)) {
+            const owner = t.startsWith("/home") ? USER : "root";
+            const lines = names.map((n) => {
+              const isDir = n === "." || n === ".." || dirs.includes(n);
+              const size = isDir ? 4096 : (FS[t][n] || "").length;
+              return (
+                (isDir ? "drwxr-xr-x 2 " : "-rw-r--r-- 1 ") +
+                owner +
+                " " +
+                owner +
+                " " +
+                String(size).padStart(5) +
+                " Oct 18 09:41 " +
+                n
+              );
+            });
+            print(
+              "total " +
+                names.length * 4 +
+                (lines.length ? "\n" + lines.join("\n") : ""),
+            );
+          } else if (names.length) print(names.join("  "));
+        };
+
+        CMDS.cat = (a) => {
+          if (!a.length) return;
+          a.forEach((arg) => {
+            const p = resolve(arg),
+              d = parentOf(p),
+              b = p.slice(p.lastIndexOf("/") + 1);
+            if (denied(p)) print("cat: " + arg + ": Permission denied");
+            else if (FS[p]) print("cat: " + arg + ": Is a directory");
+            else if (FS[d] && FS[d][b] !== undefined) print(FS[d][b]);
+            else print("cat: " + arg + ": No such file or directory");
+          });
+        };
+
+        CMDS.su = () => {
+          if (root) return;
+          print("Password:");
+          print("su: Authentication failure");
+        };
+
+        CMDS.sudo = (a) => {
+          if (!a.length) return print("usage: sudo [-i] [-s] <command>");
+          const f = a[0];
+          if (
+            f === "-i" ||
+            f === "-s" ||
+            (f === "su" && (a.length === 1 || a[1] === "-" || a[1] === "root"))
+          ) {
+            root = true;
+            if (f === "-i" || a.includes("-")) cwd = "/root";
+            return;
+          }
+          if (!CMDS[f]) return print("sudo: " + f + ": command not found");
+          const was = root;
+          root = true;
+          try {
+            CMDS[f](a.slice(1));
+          } finally {
+            root = was;
+          }
+        };
+
+        CMDS.exit = () => {
+          if (root) {
+            root = false;
+            if (cwd === "/root" || cwd.startsWith("/root/")) cwd = HOME;
+          } else {
+            print("logout");
+            print("[session is persistent - use the menu to leave]", "ff-k");
+          }
+        };
+
+        CMDS.fastfetch = () => {
+          const user = root ? "root" : USER,
+            title = user + "@" + HOST;
+          const rows = [
+            ["OS", 'PenguinOS 1.0 "Arctic" x86_64'],
+            ["Host", "Antarctic Station Node (rev 7)"],
+            ["Kernel", "Linux 6.8.0-penguin"],
+            ["Uptime", "12 days, 4 hours, 37 mins"],
+            ["Packages", "1337 (dpkg), 24 (flatpak)"],
+            ["Shell", "bash 5.2.21"],
+            ["Display (eDP-1)", "1920x1080 @ 60 Hz"],
+            ["DE", "Glacier 3.4"],
+            ["WM", "Iceberg (Wayland)"],
+            ["Terminal", "ptty 0.9.2"],
+            ["CPU", "AMD Ryzen 7 5800X (16) @ 4.85 GHz"],
+            ["GPU", "NVIDIA GeForce RTX 3060 [Discrete]"],
+            ["Memory", "3.84 GiB / 15.52 GiB (25%)"],
+            ["Swap", "0 B / 2.00 GiB (0%)"],
+            ["Disk (/)", "74.3 GiB / 232.9 GiB (32%) - ext4"],
+            ["Local IP (eth0)", "10.0.0.42/24"],
+            ["Locale", "en_US.UTF-8"],
+          ];
+          const blocks = [
+            "#3b3b4f",
+            "#e06c75",
+            "#98c379",
+            "#e5c07b",
+            "#61afef",
+            "#c678dd",
+            "#56b6c2",
+            "#d8d8e0",
+          ]
+            .map((c) => '<span style="background:' + c + '">   </span>')
+            .join("");
+          const html = [
+            '<b class="ff-k">' + title + "</b>",
+            "-".repeat(title.length),
+            ...rows.map(
+              (r) => '<span class="ff-k">' + r[0] + "</span>: " + r[1],
+            ),
+            "",
+            blocks,
+          ].join("\n");
+          const wrap = document.createElement("div");
+          wrap.className = "ff";
+          const art = document.createElement("pre");
+          art.className = "ff-art";
+          art.textContent = ART.join("\n");
+          const info = document.createElement("pre");
+          info.innerHTML = html;
+          wrap.append(art, info);
+          out.appendChild(wrap);
+        };
+        CMDS.neofetch = CMDS.fastfetch;
+
+        function run(raw) {
+          echo(raw);
+          const line = raw.trim();
+          if (!line) return;
+          hist.push(line);
+          const a = line.split(/\s+/);
+          if (CMDS[a[0]]) CMDS[a[0]](a.slice(1));
+          else print("bash: " + a[0] + ": command not found");
+        }
+
+        function complete() {
+          const v = inp.value,
+            parts = v.split(/\s+/),
+            last = parts[parts.length - 1];
+          if (!last) return;
+          const pool =
+            parts.length === 1 ? Object.keys(CMDS) : Object.keys(FS[cwd] || {});
+          const m = pool.filter((x) => x.startsWith(last));
+          if (m.length === 1) {
+            parts[parts.length - 1] = m[0];
+            inp.value = parts.join(" ") + " ";
+          } else if (m.length > 1) {
+            echo(v);
+            print(m.join("  "));
+          }
+        }
+
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            const v = inp.value;
+            inp.value = "";
+            run(v);
+            hi = hist.length;
+            upd();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (hi > 0) inp.value = hist[--hi];
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (hi < hist.length - 1) inp.value = hist[++hi];
+            else {
+              hi = hist.length;
+              inp.value = "";
+            }
+          } else if (e.key === "Tab") {
+            e.preventDefault();
+            complete();
+          } else if (e.ctrlKey && e.key === "l") {
+            e.preventDefault();
+            CMDS.clear();
+          } else if (
+            e.ctrlKey &&
+            e.key === "c" &&
+            inp.selectionStart === inp.selectionEnd
+          ) {
+            e.preventDefault();
+            echo(inp.value + "^C");
+            inp.value = "";
+          }
+          box.scrollTop = box.scrollHeight;
+        });
+        box.addEventListener("click", () => {
+          if (!String(window.getSelection()))
+            inp.focus({ preventScroll: true });
+        });
+
+        print(
+          "Welcome to PenguinOS 1.0 (Arctic) (GNU/Linux 6.8.0-penguin x86_64)",
+        );
+        print(" * Type 'help' for a list of commands.");
+        print(" * Try: fastfetch, whoami, sudo su\n");
+        upd();
+        window.__shFocus = () => inp.focus({ preventScroll: true });
+      })();
+
       const menuBtn = document.getElementById("menuBtn");
       const menu = document.getElementById("menu");
 
@@ -2198,7 +2677,7 @@
         });
         document
           .querySelector(".card")
-          .classList.toggle("wide", name === "writeups"); // add this line
+          .classList.toggle("wide", name === "writeups" || name === "terminal");
         document.getElementById("tagline").textContent = TAGLINES[name];
         menu.querySelectorAll("a").forEach((a) => {
           if (a.getAttribute("href") === "#" + name)
@@ -2206,6 +2685,7 @@
           else a.removeAttribute("aria-current");
         });
         if (name === "timeline" && window.__tlReplay) window.__tlReplay();
+        if (name === "terminal" && window.__shFocus) window.__shFocus();
         setMenu(false);
       }
 
