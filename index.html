@@ -3456,6 +3456,10 @@
           "  exit          drop back to the normal user",
           "  ls cd pwd cat file basics",
           "  echo date uname uptime hostname history clear",
+          "",
+          "  pentest toolkit (sandboxed, cosmetic only):",
+          "  nmap rustscan gobuster ffuf nikto sqlmap",
+          "  hydra john hashcat aircrack-ng gdb msfconsole",
         ].join("\n");
 
         const CMDS = Object.create(null);
@@ -3703,6 +3707,696 @@
           out.appendChild(wrap);
         };
         CMDS.neofetch = CMDS.fastfetch;
+
+        /* ── Cosmetic pentest-toolkit commands ─────────────────────
+           None of these touch the network or a real filesystem — they
+           just print hardcoded, scripted transcripts for flavor, but
+           they do parse flags/switches and the target the user typed
+           so the output reacts to what was actually entered. */
+        const TARGET_IP = "10.0.0.17";
+        const TARGET_HOST = "king-server";
+
+        // Pull flags (with optional values) and the "target" (first
+        // non-flag, non-flag-value token) out of an argv array.
+        function parseArgs(a, valueFlags) {
+          valueFlags = valueFlags || [];
+          const flags = new Set();
+          const values = {};
+          const positional = [];
+          for (let i = 0; i < a.length; i++) {
+            const tok = a[i];
+            if (tok[0] === "-") {
+              flags.add(tok);
+              const eq = tok.indexOf("=");
+              if (eq > -1) {
+                values[tok.slice(0, eq)] = tok.slice(eq + 1);
+                flags.add(tok.slice(0, eq));
+              } else if (valueFlags.includes(tok) && i + 1 < a.length) {
+                values[tok] = a[++i];
+              }
+            } else {
+              positional.push(tok);
+            }
+          }
+          return {
+            flags,
+            values,
+            positional,
+            target: positional[positional.length - 1],
+          };
+        }
+        const hasAny = (flags, ...names) => names.some((n) => flags.has(n));
+        const stripProto = (s) =>
+          (s || "").replace(/^[a-z]+:\/\//i, "").replace(/\/.*$/, "");
+
+        function matchPortSpec(spec, port) {
+          return spec.split(",").some((part) => {
+            part = part.trim();
+            if (!part) return false;
+            if (part.includes("-")) {
+              const [lo, hi] = part.split("-").map(Number);
+              return port >= lo && port <= hi;
+            }
+            return Number(part) === port;
+          });
+        }
+
+        /* ── nmap ─────────────────────────────────────────────── */
+        const NMAP_PORTS = [
+          {
+            port: 22,
+            service: "ssh",
+            version:
+              "OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)",
+            scripts: [
+              "| ssh-hostkey:",
+              "|   256 3c:aa:1f:9e:05:7b:88:21:dd:40:ac:3e:9d:11:5c:4a (ECDSA)",
+              "|_  256 9e:4b:22:70:01:5f:3c:18:8a:9e:44:1b:77:2d:60:ee (ED25519)",
+            ],
+          },
+          {
+            port: 80,
+            service: "http",
+            version: "nginx 1.24.0",
+            scripts: [
+              "| http-title: King Server \u2014 Login",
+              "|_http-server-header: nginx/1.24.0",
+            ],
+          },
+          {
+            port: 139,
+            service: "netbios-ssn",
+            version: "Samba smbd 4.17.5",
+            scripts: [],
+          },
+          {
+            port: 445,
+            service: "netbios-ssn",
+            version: "Samba smbd 4.17.5",
+            scripts: [
+              "| smb2-security-mode:",
+              "|   3:1:1:",
+              "|_    Message signing enabled but not required",
+            ],
+          },
+        ];
+
+        CMDS.nmap = (a) => {
+          const { flags, values, target } = parseArgs(a, [
+            "-p",
+            "-oN",
+            "-oX",
+            "-oA",
+            "-oG",
+            "--script",
+            "-iL",
+            "--min-rate",
+            "--max-rate",
+          ]);
+          const tgt = target || TARGET_IP;
+          const aggressive = flags.has("-A");
+          const wantVersion = aggressive || flags.has("-sV");
+          const wantScripts = aggressive || flags.has("-sC");
+          const wantOS = aggressive || flags.has("-O");
+          const noDNS = flags.has("-n");
+          const skipDiscovery = flags.has("-Pn");
+
+          let ports = NMAP_PORTS;
+          if (values["-p"]) {
+            const spec = values["-p"];
+            ports =
+              spec === "-"
+                ? NMAP_PORTS
+                : NMAP_PORTS.filter((p) => matchPortSpec(spec, p.port));
+          }
+
+          const lines = [
+            "Starting Nmap 7.95 ( https://nmap.org ) at " +
+              new Date().toTimeString().slice(0, 8),
+          ];
+          if (skipDiscovery)
+            lines.push(
+              "Note: Host seems down. Skipping host discovery (-Pn), assuming it's up.",
+            );
+          lines.push(
+            "Nmap scan report for " +
+              (noDNS ? tgt : TARGET_HOST + "." + "lan (" + tgt + ")"),
+            "Host is up (0.0041s latency).",
+          );
+          if (!ports.length) {
+            lines.push(
+              "All " +
+                (values["-p"] || "1000") +
+                " scanned ports on " +
+                tgt +
+                " are closed",
+            );
+          } else {
+            lines.push(
+              "Not shown: " +
+                (1000 - ports.length) +
+                " closed tcp ports (reset)",
+              "PORT     STATE SERVICE" + (wantVersion ? "  VERSION" : ""),
+            );
+            ports.forEach((p) => {
+              lines.push(
+                String(p.port + "/tcp").padEnd(9) +
+                  "open  " +
+                  p.service.padEnd(9) +
+                  (wantVersion ? p.version : ""),
+              );
+              if (wantScripts && p.scripts.length) lines.push(...p.scripts);
+            });
+          }
+          if (wantOS) {
+            lines.push(
+              "Device type: general purpose",
+              "Running: Linux 6.X",
+              "OS CPE: cpe:/o:linux:linux_kernel:6",
+              "OS details: Linux 6.1 - 6.8",
+              "Network Distance: 2 hops",
+            );
+          }
+          if (aggressive) {
+            lines.push(
+              "",
+              "TRACEROUTE (using port 80/tcp)",
+              "HOP RTT      ADDRESS",
+              "1   0.41 ms  10.0.0.1",
+              "2   2.07 ms  " + tgt,
+            );
+          }
+          lines.push(
+            "",
+            "Nmap done: 1 IP address (1 host up) scanned in " +
+              (4.82 + ports.length * 1.3 + (wantScripts ? 3.1 : 0)).toFixed(2) +
+              " seconds",
+          );
+          print(lines.join("\n"));
+        };
+
+        /* ── rustscan ─────────────────────────────────────────── */
+        CMDS.rustscan = (a) => {
+          const { flags, values, target } = parseArgs(a, [
+            "-p",
+            "-a",
+            "--addresses",
+            "-b",
+            "--batch-size",
+            "-t",
+            "--timeout",
+            "--ulimit",
+          ]);
+          const tgt =
+            values["-a"] || values["--addresses"] || target || TARGET_IP;
+          let ports = NMAP_PORTS;
+          if (values["-p"]) {
+            const spec = values["-p"];
+            ports = NMAP_PORTS.filter((p) => matchPortSpec(spec, p.port));
+          }
+          const lines = [
+            ".----. .-. .-. .----..---.  .----. .--.  .-. .-.",
+            "| {}  }| { } |{ {__ {_{_}}{ {__  / {} \\ |  `| |",
+            "| .-. \\| {_} |.-._} }| |  .-._} }/  /\\  \\| |\\  |",
+            "`-' `-'`-----'`----' `-'  `----' `-'  `-'`-' `-'",
+            "The Modern Day Port Scanner.",
+            "",
+            "[~] " +
+              tgt +
+              " scanned in 1.32s, found " +
+              ports.length +
+              " open ports.",
+          ];
+          ports.forEach((p) => lines.push("Open " + tgt + ":" + p.port));
+          if (flags.has("--ulimit"))
+            lines.push(
+              "[!] File limit higher than system limit, ulimit set to " +
+                values["--ulimit"],
+            );
+          lines.push(
+            "[~] Starting Script(s)",
+            "[>] Running nmap -A -oN rustscan.txt -p " +
+              ports.map((p) => p.port).join(",") +
+              " " +
+              tgt,
+          );
+          print(lines.join("\n"));
+        };
+
+        /* ── gobuster ─────────────────────────────────────────── */
+        const WORDS = [
+          "admin",
+          "backup",
+          "config",
+          "uploads",
+          "login",
+          "api",
+          "dashboard",
+          "dev",
+          "old",
+          "test",
+          "images",
+          "assets",
+        ];
+        CMDS.gobuster = (a) => {
+          const mode = a[0] && a[0][0] !== "-" ? a[0] : "dir";
+          const rest = a[0] === mode ? a.slice(1) : a;
+          const { values } = parseArgs(rest, [
+            "-u",
+            "-w",
+            "-x",
+            "-t",
+            "-s",
+            "--url",
+            "-d",
+          ]);
+          const url =
+            values["-u"] || values["--url"] || "http://" + TARGET_IP + "/";
+          const exts = (values["-x"] || "").split(",").filter(Boolean);
+          const wordlist =
+            values["-w"] || "/usr/share/wordlists/dirb/common.txt";
+          const hits = [
+            ["/admin", 301, 178],
+            ["/backup", 403, 153],
+            ["/index.html", 200, 2214],
+            ["/robots.txt", 200, 42],
+            ["/uploads", 301, 178],
+          ];
+          if (exts.length) hits.push(["/config." + exts[0], 200, 341]);
+          const lines = [
+            "===============================================================",
+            "Gobuster v3.6",
+            "===============================================================",
+            "[+] Url:          " + url,
+            "[+] Method:       GET",
+            "[+] Threads:      " + (values["-t"] || "10"),
+            "[+] Wordlist:     " + wordlist,
+            "[+] Status codes: " +
+              (values["-s"] || "200,204,301,302,307,401,403"),
+            mode === "dir"
+              ? "[+] Mode:         dir"
+              : "[+] Mode:         " + mode,
+            "===============================================================",
+          ];
+          hits.forEach((h) =>
+            lines.push(
+              h[0].padEnd(22) + "(Status: " + h[1] + ") [Size: " + h[2] + "]",
+            ),
+          );
+          lines.push(
+            "===============================================================",
+            "Finished",
+            "===============================================================",
+          );
+          print(lines.join("\n"));
+        };
+
+        /* ── ffuf ─────────────────────────────────────────────── */
+        CMDS.ffuf = (a) => {
+          const { values } = parseArgs(a, [
+            "-u",
+            "-w",
+            "-mc",
+            "-fc",
+            "-t",
+            "-X",
+            "-H",
+          ]);
+          const url = values["-u"] || "http://" + TARGET_IP + "/FUZZ";
+          const lines = [
+            "",
+            "        /'___\\  /'___\\           /'___\\       ",
+            "       /\\ \\__/ /\\ \\__/  __  __   /\\ \\__/       ",
+            "       \\ \\ ,__\\\\ \\ ,__\\/\\ \\/\\ \\  \\ \\ ,__\\      ",
+            "        \\ \\ \\_/ \\ \\ \\_/\\ \\ \\_\\ \\  \\ \\ \\_/      ",
+            "         \\ \\_\\   \\ \\_\\  \\ \\____/   \\ \\_\\       ",
+            "          \\/_/    \\/_/   \\/___/     \\/_/       v2.1.0",
+            "",
+            "________________________________________________",
+            " :: Method           : " + (values["-X"] || "GET"),
+            " :: URL              : " + url,
+            " :: Wordlist         : FUZZ: " +
+              (values["-w"] || "/usr/share/seclists/raft-small.txt"),
+            " :: Matcher          : Response status: " +
+              (values["-mc"] || "200,204,301,302,307,401,403"),
+          ];
+          if (values["-fc"])
+            lines.push(
+              " :: Filter           : Response status: " + values["-fc"],
+            );
+          lines.push(
+            "________________________________________________",
+            "",
+            "login                   [Status: 200, Size: 1203]",
+            "config.php.bak          [Status: 200, Size: 341]",
+            "upload                  [Status: 301, Size: 169]",
+            ":: Progress: [87651/87651] :: Job [1/1] :: 940 req/sec",
+          );
+          print(lines.join("\n"));
+        };
+
+        /* ── nikto ────────────────────────────────────────────── */
+        CMDS.nikto = (a) => {
+          const { values } = parseArgs(a, ["-h", "-p", "-o", "-Tuning"]);
+          const tgt = values["-h"] || TARGET_IP;
+          const port = values["-p"] || "80";
+          print(
+            [
+              "- Nikto v2.5.0",
+              "---------------------------------------------------------------------",
+              "+ Target IP:          " + tgt,
+              "+ Target Hostname:    " + TARGET_HOST,
+              "+ Target Port:        " + port,
+              "+ Start Time:         " + new Date().toString(),
+              "---------------------------------------------------------------------",
+              "+ Server: nginx/1.24.0",
+              "+ /: Server leaks inodes via ETags.",
+              "+ /admin/: Admin login page/section found.",
+              "+ /uploads/: Directory indexing found.",
+              "+ 7863 requests: 0 error(s) and 4 item(s) reported on remote host",
+              "+ End Time:           " + new Date().toString() + " (9 seconds)",
+            ].join("\n"),
+          );
+        };
+
+        /* ── sqlmap ───────────────────────────────────────────── */
+        CMDS.sqlmap = (a) => {
+          const { flags, values } = parseArgs(a, [
+            "-u",
+            "-D",
+            "-T",
+            "-C",
+            "--level",
+            "--risk",
+          ]);
+          const url = values["-u"] || "http://" + TARGET_IP + "/item.php?id=1";
+          const banner = [
+            "        ___",
+            "       __H__",
+            " ___ ___[(]_____ ___ ___  {1.8.11#stable}",
+            "|_ -| . [(]     | .'| . |",
+            "|___|_  [(]_|_|_|__,|  _|",
+            "      |_|V...       |_|   https://sqlmap.org",
+            "",
+            "[*] starting @ " + new Date().toTimeString().slice(0, 8),
+            "[INFO] testing connection to the target URL",
+          ];
+          if (flags.has("--dbs")) {
+            print(
+              banner
+                .concat([
+                  "[INFO] fetching database names",
+                  "available databases [4]:",
+                  "[*] information_schema",
+                  "[*] kingserver",
+                  "[*] mysql",
+                  "[*] performance_schema",
+                ])
+                .join("\n"),
+            );
+            return;
+          }
+          if (flags.has("--tables")) {
+            print(
+              banner
+                .concat([
+                  "[INFO] fetching tables for database: '" +
+                    (values["-D"] || "kingserver") +
+                    "'",
+                  "Database: " + (values["-D"] || "kingserver"),
+                  "[3 tables]",
+                  "+-----------+",
+                  "| users     |",
+                  "| sessions  |",
+                  "| flags     |",
+                  "+-----------+",
+                ])
+                .join("\n"),
+            );
+            return;
+          }
+          if (flags.has("--dump")) {
+            print(
+              banner
+                .concat([
+                  "[INFO] fetching entries for table '" +
+                    (values["-T"] || "users") +
+                    "'",
+                  "Database: " +
+                    (values["-D"] || "kingserver") +
+                    "  Table: " +
+                    (values["-T"] || "users"),
+                  "+----+-------+----------------------------------+",
+                  "| id | user  | password                         |",
+                  "+----+-------+----------------------------------+",
+                  "| 1  | king  | 5f4dcc3b5aa765d61d8327deb882cf99 |",
+                  "+----+-------+----------------------------------+",
+                ])
+                .join("\n"),
+            );
+            return;
+          }
+          if (flags.has("--current-user")) {
+            print(banner.concat(["current user: 'king@localhost'"]).join("\n"));
+            return;
+          }
+          print(
+            banner
+              .concat([
+                "[INFO] testing if GET parameter 'id' is dynamic",
+                "[INFO] GET parameter 'id' appears to be 'OR boolean-based blind' injectable",
+                "[INFO] testing 'MySQL >= 8.0 AND time-based blind'",
+                "GET parameter 'id' is vulnerable. Do you want to keep testing? [y/N] y",
+                "sqlmap identified the following injection point(s):",
+                "    Parameter: id (GET)",
+                "        Type: boolean-based blind",
+                "        Payload: id=1 AND 4219=4219",
+                "[INFO] the back-end DBMS is MySQL",
+                "web application technology: Nginx, PHP 8.2.12",
+                "back-end DBMS: MySQL >= 8.0",
+                "[INFO] target URL: " + url,
+              ])
+              .join("\n"),
+          );
+        };
+
+        /* ── hydra ────────────────────────────────────────────── */
+        const HYDRA_CREDS = {
+          ssh: ["king", "p3ngu1n_k1ng"],
+          ftp: ["anonymous", "anonymous"],
+          "http-post-form": ["admin", "admin123"],
+          smb: ["king", "p3ngu1n_k1ng"],
+          telnet: ["root", "toor"],
+        };
+        CMDS.hydra = (a) => {
+          const { values, positional } = parseArgs(a, [
+            "-l",
+            "-L",
+            "-p",
+            "-P",
+            "-s",
+            "-t",
+          ]);
+          const svcMatch = positional.find((x) => /^[a-z-]+:\/\//.test(x));
+          const service =
+            (svcMatch && svcMatch.split("://")[0]) ||
+            positional.find((x) => Object.keys(HYDRA_CREDS).includes(x)) ||
+            "ssh";
+          const tgt =
+            (svcMatch && stripProto(svcMatch)) ||
+            positional.find((x) => x !== service) ||
+            TARGET_IP;
+          const port =
+            values["-s"] ||
+            { ssh: 22, ftp: 21, telnet: 23, smb: 445, "http-post-form": 80 }[
+              service
+            ] ||
+            22;
+          const [user, pass] = HYDRA_CREDS[service] || HYDRA_CREDS.ssh;
+          const loginLabel = values["-l"] || user;
+          print(
+            [
+              "Hydra v9.5 (c) 2023 by van Hauser/THC - for legal purposes only",
+              "",
+              "Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at " +
+                new Date().toTimeString().slice(0, 8),
+              "[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries",
+              "[DATA] attacking " + service + "://" + tgt + ":" + port + "/",
+              "[STATUS] 812.00 tries/min, 812 tries in 00:01h",
+              "[" +
+                port +
+                "][" +
+                service +
+                "] host: " +
+                tgt +
+                "   login: " +
+                loginLabel +
+                "   password: " +
+                pass,
+              "1 of 1 target successfully completed, 1 valid password found",
+              "Hydra finished at " + new Date().toTimeString().slice(0, 8),
+            ].join("\n"),
+          );
+        };
+
+        /* ── john ─────────────────────────────────────────────── */
+        CMDS.john = (a) => {
+          const { flags, values } = parseArgs(a, ["--format", "--wordlist"]);
+          if (flags.has("--show")) {
+            print(
+              "king:p3ngu1n_k1ng:1000:1000::/home/king:/bin/bash\n\n1 password hash cracked, 0 left",
+            );
+            return;
+          }
+          const format = values["--format"] || "sha512crypt";
+          print(
+            [
+              "Using default input encoding: UTF-8",
+              "Loaded 1 password hash (" +
+                format +
+                ", crypt(3) $6$ [SHA512 256/256 AVX2 4x])",
+              "Cost 1 (iteration count) is 5000 for all loaded hashes",
+              "Will run 8 OpenMP threads",
+              "Press 'q' or Ctrl-C to abort, almost any other key for status",
+              "p3ngu1n_k1ng     (king)",
+              "1g 0:00:00:07 DONE (" +
+                new Date().toTimeString().slice(0, 8) +
+                ") 0.1428g/s 1142p/s 1142c/s 1142C/s pengu1n..monkey123",
+              'Use the "--show" option to display all of the cracked passwords reliably',
+              "Session completed.",
+            ].join("\n"),
+          );
+        };
+
+        /* ── hashcat ──────────────────────────────────────────── */
+        const HASHCAT_MODES = {
+          0: ["MD5", "5f4dcc3b5aa765d61d8327deb882cf99", "p3ngu1n_k1ng"],
+          1000: ["NTLM", "32ed87bdb5fdc5e9cba88547376818d4", "p3ngu1n_k1ng"],
+          1800: ["sha512crypt $6$", "$6$rounds=5000$...", "p3ngu1n_k1ng"],
+          22000: [
+            "WPA-PBKDF2-PMKID+EAPOL",
+            "a1b2c3d4...:icebr3aking",
+            "icebr3aking",
+          ],
+        };
+        CMDS.hashcat = (a) => {
+          const { values } = parseArgs(a, ["-m", "-a", "-o", "-r"]);
+          const mode = values["-m"] || "0";
+          const [label, hash, cracked] =
+            HASHCAT_MODES[mode] || HASHCAT_MODES[0];
+          print(
+            [
+              "hashcat (v6.2.6) starting",
+              "",
+              "OpenCL API (OpenCL 3.0) - Platform #1 [Mesa]",
+              "* Device #1: llvmpipe, 3935/7870 MB, 4MCU",
+              "",
+              "Hashes: 1 digest; 1 unique digest, 1 unique salt",
+              "Watchdog: Temperature abort trigger set to 90c",
+              "",
+              hash + ":" + cracked,
+              "",
+              "Session..........: hashcat",
+              "Status...........: Cracked",
+              "Hash.Mode........: " + mode + " (" + label + ")",
+              "Recovered........: 1/1 (100.00%) Digests",
+              "Time.Started.....: " + new Date().toTimeString().slice(0, 8),
+            ].join("\n"),
+          );
+        };
+
+        /* ── aircrack-ng ──────────────────────────────────────── */
+        CMDS["aircrack-ng"] = (a) => {
+          const { values } = parseArgs(a, ["-w", "-b", "-e"]);
+          const bssid = values["-b"] || "02:4F:1A:9C:3E:7B";
+          print(
+            [
+              "Reading packets, please wait...",
+              "",
+              "                               Aircrack-ng 1.7 ",
+              "",
+              "   BSSID              ESSID         Encryption",
+              "   " +
+                bssid +
+                "  " +
+                (values["-e"] || "PenguinNet") +
+                "    WPA2",
+              "",
+              "      [00:00:14] 148231/180000 keys tested (10432.18 k/s)",
+              "",
+              "                        KEY FOUND! [ icebr3aking ]",
+              "",
+              "      Master Key     : 8A 4F 2C 91 6D BB ... (truncated)",
+              "      Transient Key  : A1 3D 7E ... (truncated)",
+              "      EAPOL HMAC     : 9C F2 ... (truncated)",
+            ].join("\n"),
+          );
+        };
+
+        /* ── gdb ──────────────────────────────────────────────── */
+        CMDS.gdb = (a) => {
+          const { flags, values, positional } = parseArgs(a, ["--args", "-ex"]);
+          const bin = positional[0] || "./a.out";
+          const quiet = flags.has("-q") || flags.has("--quiet");
+          const lines = [];
+          if (!quiet)
+            lines.push(
+              "GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50",
+              "Copyright (C) 2024 Free Software Foundation, Inc.",
+              'This GDB was configured as "x86_64-linux-gnu".',
+            );
+          lines.push("Reading symbols from " + bin + "...");
+          const cmd =
+            values["-ex"] || positional.slice(1).join(" ") || "break main";
+          lines.push(
+            "(gdb) " + cmd,
+            "Breakpoint 1 at 0x1189: file main.c, line 12.",
+            "(gdb) run",
+            "Starting program: " + bin,
+            "",
+            "Breakpoint 1, main () at main.c:12",
+            "12\t    char buf[64];",
+            "(gdb)",
+          );
+          print(lines.join("\n"));
+        };
+
+        /* ── msfconsole / metasploit ──────────────────────────── */
+        CMDS.msfconsole = (a) => {
+          const { flags, values } = parseArgs(a, ["-x"]);
+          const lines = [];
+          if (!flags.has("-q"))
+            lines.push(
+              "       =[ metasploit v6.4.0-dev                          ]",
+              "+ -- --=[ 2384 exploits - 1234 auxiliary - 413 post       ]",
+              "+ -- --=[ 968 payloads - 46 encoders - 11 nops             ]",
+              "+ -- --=[ 9 evasion                                        ]",
+              "",
+            );
+          if (values["-x"]) {
+            values["-x"]
+              .split(";")
+              .forEach((c) => lines.push("msf6 > " + c.trim()));
+          } else {
+            lines.push(
+              "msf6 > use exploit/multi/samba/usermap_script",
+              "[*] Using configured payload cmd/unix/reverse",
+              "msf6 exploit(multi/samba/usermap_script) > set RHOSTS " +
+                TARGET_IP,
+              "RHOSTS => " + TARGET_IP,
+              "msf6 exploit(multi/samba/usermap_script) > run",
+            );
+          }
+          lines.push(
+            "[*] Started reverse TCP handler",
+            "[*] Command shell session 1 opened (" + TARGET_IP + ":445)",
+            "",
+            "whoami",
+            "king",
+          );
+          print(lines.join("\n"));
+        };
+        CMDS.metasploit = CMDS.msfconsole;
 
         function run(raw) {
           echo(raw);
