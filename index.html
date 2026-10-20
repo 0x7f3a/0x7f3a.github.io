@@ -3471,6 +3471,11 @@
           },
         };
 
+        // Declared early (before HELP) since the help text and the
+        // toolkit commands below both reference the one fixed target.
+        const TARGET_IP = "10.10.128.24";
+        const TARGET_HOST = "king-server";
+
         const HELP = [
           "PenguinOS shell, version 1.0.0(1)-release",
           "",
@@ -3485,6 +3490,9 @@
           "  pentest toolkit (sandboxed, cosmetic only):",
           "  nmap rustscan gobuster ffuf nikto sqlmap curl",
           "  hydra john hashcat aircrack-ng gdb msfconsole ssh",
+          "",
+          "  autopwn       run the full recon\u2192exploit chain, scripted",
+          "                (simulated, " + TARGET_IP + " only, flags redacted)",
         ].join("\n");
 
         const CMDS = Object.create(null);
@@ -3744,8 +3752,6 @@
            just print hardcoded, scripted transcripts for flavor, but
            they do parse flags/switches and the target the user typed
            so the output reacts to what was actually entered. */
-        const TARGET_IP = "10.10.128.24";
-        const TARGET_HOST = "king-server";
 
         // Pull flags (with optional values) and the "target" (first
         // non-flag, non-flag-value token) out of an argv array.
@@ -4515,6 +4521,59 @@
           print(lines.join("\n"));
         };
         CMDS.metasploit = CMDS.msfconsole;
+
+        /* ── autopwn ──────────────────────────────────────────────
+           A single scripted command that narrates the whole recon→
+           exploit→privesc chain as a timed sequence of lines. It is
+           100% canned text: no fetch, no WebSocket, no real address
+           is ever touched, and it refuses to "run" against anything
+           but the one fixed, fake TARGET_IP above. The two real flags
+           on that chain are redacted here on purpose — this command
+           is a demo reel, not a shortcut past the CTF board. */
+        CMDS.autopwn = (a) => {
+          const { positional } = parseArgs(a, []);
+          const reqTgt = positional[0];
+          if (reqTgt && reqTgt !== TARGET_IP && reqTgt !== TARGET_HOST) {
+            print(
+              'autopwn: refusing target "' +
+                reqTgt +
+                '" — this simulator only ever runs against ' +
+                TARGET_IP +
+                " (" +
+                TARGET_HOST +
+                "). no other host is scanned, no packet leaves this browser.",
+            );
+            return;
+          }
+          const steps = [
+            "[*] autopwn :: scripted recon\u2192exploit chain",
+            "[*] simulated only \u2014 canned output, no sockets opened, target fixed at " +
+              TARGET_IP,
+            "",
+            "[1/5] recon      nmap -p- -sV " + TARGET_IP,
+            "                 22/tcp open ssh, 80/tcp open http, 8081/tcp open http",
+            "[2/5] web enum   gobuster dir -u http://" + TARGET_IP + ":8081/",
+            "                 found: /dev-notes.txt (200)",
+            "[3/5] creds      hydra -l king -P rockyou.txt ssh://" + TARGET_IP,
+            "                 password found: [redacted \u2014 run `hydra` yourself for the real one]",
+            "[4/5] access     ssh king@" + TARGET_IP,
+            "                 session opened as king",
+            "[5/5] privesc    sudo -l \u2192 gtfobins lookup \u2192 root shell",
+            "",
+            "[+] chain complete \u2014 2 flags sit along this path, both redacted above.",
+            "    replay each stage yourself (nmap, gobuster, hydra, ssh, sudo -l)",
+            "    to capture them for real \u2014 see `help` for the full toolkit.",
+          ];
+          let i = 0;
+          const next = () => {
+            if (i >= steps.length) return;
+            print(steps[i]);
+            box.scrollTop = box.scrollHeight;
+            i++;
+            setTimeout(next, steps[i - 1] === "" ? 120 : 260);
+          };
+          next();
+        };
 
         /* ── ssh (drops into a second, remote fake shell) ──────── */
         CMDS.ssh = (a) => {
