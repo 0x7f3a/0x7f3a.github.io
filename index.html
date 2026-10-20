@@ -1930,7 +1930,12 @@
         </div>
         <p class="sh-link">
           Ready for a challenge?
-          <a href="https://ctf-0x7f3a.github.io" target="_blank" rel="noopener noreferrer">Open CTF &rarr;</a>
+          <a
+            href="https://ctf-0x7f3a.github.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Open CTF &rarr;</a
+          >
         </p>
         <button class="back" data-go="home">&lt; back to profile</button>
       </section>
@@ -3739,7 +3744,7 @@
            just print hardcoded, scripted transcripts for flavor, but
            they do parse flags/switches and the target the user typed
            so the output reacts to what was actually entered. */
-        const TARGET_IP = "10.0.0.17";
+        const TARGET_IP = "10.10.128.24";
         const TARGET_HOST = "king-server";
 
         // Pull flags (with optional values) and the "target" (first
@@ -3850,7 +3855,13 @@
             "--min-rate",
             "--max-rate",
           ]);
-          const tgt = target || TARGET_IP;
+          if (target && target !== TARGET_IP && target !== TARGET_HOST)
+            return print(
+              'Failed to resolve "' +
+                target +
+                '".\r\nWARNING: No targets were specified, so 0 hosts scanned.',
+            );
+          const tgt = TARGET_IP;
           const aggressive = flags.has("-A");
           const wantVersion = aggressive || flags.has("-sV");
           const wantScripts = aggressive || flags.has("-sC");
@@ -3955,8 +3966,12 @@
             "--timeout",
             "--ulimit",
           ]);
-          const tgt =
-            values["-a"] || values["--addresses"] || target || TARGET_IP;
+          const reqTgt = values["-a"] || values["--addresses"] || target;
+          if (reqTgt && reqTgt !== TARGET_IP && reqTgt !== TARGET_HOST)
+            return print(
+              '[!] Could not resolve "' + reqTgt + '". No IPs to scan.',
+            );
+          const tgt = TARGET_IP;
           let ports = NMAP_PORTS;
           if (values["-p"]) {
             const spec = values["-p"];
