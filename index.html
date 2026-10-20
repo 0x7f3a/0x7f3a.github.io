@@ -1132,6 +1132,20 @@
         background: rgba(200, 169, 110, 0.4);
         border-radius: 3px;
       }
+      .sh-link {
+        margin: 12px 0 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        color: var(--muted, #9a9aa8);
+      }
+      .sh-link a {
+        color: var(--gold);
+        text-decoration: none;
+        border-bottom: 1px dashed rgba(200, 169, 110, 0.6);
+      }
+      .sh-link a:hover {
+        border-bottom-style: solid;
+      }
       .sh pre {
         font: inherit;
         margin: 0;
@@ -1914,6 +1928,10 @@
             />
           </div>
         </div>
+        <p class="sh-link">
+          Ready for a challenge?
+          <a href="https://ctf-0x7f3a.github.io" target="_blank" rel="noopener noreferrer">Open CTF &rarr;</a>
+        </p>
         <button class="back" data-go="home">&lt; back to profile</button>
       </section>
 
