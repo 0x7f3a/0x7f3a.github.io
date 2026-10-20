@@ -733,6 +733,189 @@
         cursor: pointer;
         padding: 4px 0;
       }
+      /* ── Skills matrix (radar) ───────────────────────── */
+      .radar-wrap {
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        border-radius: var(--radius);
+        padding: 12px;
+        overflow-x: auto;
+      }
+      .radar-svg {
+        display: block;
+        width: 100%;
+        min-width: 760px;
+        height: auto;
+        overflow: visible;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .radar-ring {
+        fill: none;
+        stroke: var(--border);
+        stroke-width: 1;
+      }
+      .radar-ring.outer {
+        stroke: var(--ink-faint);
+        stroke-opacity: 0.55;
+      }
+      .radar-axis {
+        stroke: var(--border);
+        stroke-width: 1;
+      }
+      .radar-tick {
+        font-size: 10px;
+        fill: var(--ink-faint);
+      }
+      .radar-label {
+        font-size: 12.5px;
+        fill: var(--ink-muted);
+        cursor: default;
+        transition: fill 0.15s;
+      }
+      .radar-label.active {
+        fill: var(--gold);
+      }
+      .radar-shape {
+        transform-origin: 550px 440px;
+        transform: scale(0);
+        opacity: 0;
+        transition:
+          transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.5s ease;
+      }
+      .radar-shape.in {
+        transform: scale(1);
+        opacity: 1;
+      }
+      .radar-area {
+        fill: var(--gold);
+        fill-opacity: 0.22;
+        stroke: var(--gold);
+        stroke-width: 2.2;
+        stroke-linejoin: round;
+      }
+      .radar-dot {
+        fill: var(--surface);
+        stroke: var(--gold);
+        stroke-width: 2;
+        cursor: pointer;
+        transition: r 0.15s;
+      }
+      .radar-dot.active {
+        fill: var(--gold);
+      }
+      .radar-hit {
+        fill: transparent;
+        cursor: pointer;
+      }
+      .radar-readout {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12.5px;
+        color: var(--ink-muted);
+        text-align: center;
+        margin-top: 8px;
+        min-height: 1.4em;
+      }
+      .radar-readout b {
+        color: var(--gold);
+        font-weight: 500;
+      }
+      .sk-stage {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+      }
+      .sk-stage.open .ap-scrim {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .sk-meter {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 2px 0 1rem;
+      }
+      .sk-meter i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold), #e8c98e);
+        border-radius: 3px;
+      }
+      .sk-score-line {
+        display: flex;
+        justify-content: space-between;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+        color: var(--ink-muted);
+        margin-bottom: 6px;
+      }
+      .sk-score-line b {
+        color: var(--gold);
+        font-weight: 500;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .radar-shape {
+          transition: none;
+        }
+      }
+
+      /* ── Boot screen ─────────────────────────────────── */
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: var(--accent);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.4rem;
+        padding: 2rem 1.5rem;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+      }
+      .boot.hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .boot-art {
+        color: var(--gold);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.35;
+        text-align: center;
+        white-space: pre;
+      }
+      .boot-log {
+        width: min(340px, 86vw);
+        min-height: 9.2em;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+        line-height: 1.75;
+        color: #9a9aac;
+      }
+      .boot-log .ok {
+        color: var(--gold);
+        margin-right: 6px;
+      }
+      .boot-skip {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        opacity: 0.6;
+      }
+      body.boot-lock {
+        overflow: hidden;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot {
+          display: none;
+        }
+      }
+
       .back:hover {
         color: var(--ink);
       }
@@ -1417,6 +1600,11 @@
     </style>
   </head>
   <body>
+    <div class="boot" id="bootScreen" aria-hidden="true">
+      <pre class="boot-art" id="bootArt"></pre>
+      <div class="boot-log" id="bootLog"></div>
+      <div class="boot-skip">press any key to skip</div>
+    </div>
     <svg
       class="plexus"
       viewBox="0 0 800 800"
@@ -1490,6 +1678,7 @@
         <a href="#projects">projects</a>
         <a href="#writeups">writeups</a>
         <a href="#achievements">achievements</a>
+        <a href="#skills">skills matrix</a>
         <a href="#timeline">timeline</a>
         <a href="#terminal">terminal</a>
         <a href="#attackpath">attack path</a>
@@ -1656,6 +1845,36 @@
         <button class="back" data-go="home">&lt; back to profile</button>
       </section>
 
+      <!-- ───────── SKILLS MATRIX ───────── -->
+      <section class="view" id="view-skills" hidden>
+        <h2 class="view-title">Skills Matrix</h2>
+        <p class="view-sub">
+          TryHackMe skill matrix · max score 200 per category.
+        </p>
+        <div class="sk-stage" id="sk-stage">
+          <div class="radar-wrap">
+            <svg
+              class="radar-svg"
+              id="radar-skills"
+              viewBox="0 0 1100 880"
+              role="img"
+              aria-label="Radar chart of TryHackMe skill scores"
+            ></svg>
+          </div>
+          <div class="ap-scrim" id="sk-scrim"></div>
+          <div
+            class="ap-pop"
+            id="sk-pop"
+            role="dialog"
+            aria-label="Skill details"
+          ></div>
+        </div>
+        <div class="radar-readout" id="radar-readout">
+          Hover a point for its score, click to expand it.
+        </div>
+        <button class="back" data-go="home">&lt; back to profile</button>
+      </section>
+
       <!-- ───────── TIMELINE ───────── -->
       <section class="view" id="view-timeline" hidden>
         <h2 class="view-title">Timeline</h2>
@@ -1735,6 +1954,18 @@
     </div>
 
     <script>
+      /* Shared penguin ASCII art — used by the fastfetch command and the boot screen */
+      const PENGUIN_ART = [
+        "        .---.",
+        "       /     \\",
+        "       \\.@-@./",
+        "       /`\\_/`\\",
+        "      //  _  \\\\",
+        "     | \\     )|_",
+        "    /`\\_`>  <_/ \\",
+        "    \\__/'---'\\__/",
+      ];
+
       /* ════════ EDIT YOUR CONTENT HERE ════════
                                  Each item: { title, desc, tags: [], href }  (href optional)               */
 
@@ -2545,6 +2776,128 @@
         },
       ];
 
+      const SKILLS_MAX = 200;
+      const SKILLS = [
+        { title: "Security Automation", score: 185 },
+        { title: "Security Operations", score: 175 },
+        { title: "Enumeration", score: 160 },
+        { title: "Privilege Escalation", score: 145 },
+        { title: "Active Directory", score: 140 },
+        { title: "Red Teaming", score: 130 },
+        { title: "Penetration Testing", score: 125 },
+        { title: "Threat Hunting", score: 125 },
+        { title: "Security Analysis", score: 115 },
+        { title: "Vulnerability Analysis", score: 105 },
+        { title: "Threat Management", score: 105 },
+        { title: "Digital Forensics", score: 100 },
+        { title: "Web Security", score: 100 },
+        { title: "Exploitation", score: 95 },
+        { title: "Detection Engineering", score: 75 },
+        { title: "OSINT", score: 70 },
+        { title: "Pwn / Binary Exploitation", score: 60 },
+        { title: "Reverse Engineering", score: 60 },
+        { title: "Cryptography", score: 55 },
+        { title: "AI Red Teaming", score: 50 },
+        { title: "Malware Analysis", score: 45 },
+        { title: "Analyst Incident Response", score: 18 },
+        { title: "Identity Security", score: 0 },
+      ];
+
+      const SKILL_INFO = {
+        "Security Automation": [
+          "Scripting the repetitive parts of security work so detection, triage and response run without manual effort. Think glue code between tools, scheduled checks and auto-enrichment of alerts.",
+          ["Python", "Bash", "SOAR", "APIs"],
+        ],
+        "Security Operations": [
+          "Day-to-day monitoring and defence of an environment: watching alerts, triaging what matters, escalating real incidents and keeping the SOC running smoothly.",
+          ["SIEM", "Alert triage", "Playbooks", "Splunk"],
+        ],
+        Enumeration: [
+          "Mapping out everything a target exposes before attacking it: open ports, services, users, shares and versions. Good enumeration is usually what makes the exploit obvious.",
+          ["nmap", "gobuster", "enum4linux", "smbclient"],
+        ],
+        "Privilege Escalation": [
+          "Turning a low-privileged foothold into root or SYSTEM by abusing misconfigurations, weak permissions, vulnerable services or stored credentials on Linux and Windows.",
+          ["linPEAS", "winPEAS", "GTFOBins", "sudo -l"],
+        ],
+        "Active Directory": [
+          "Attacking and understanding Windows domain environments: Kerberos, delegation, trust relationships and the paths that lead from a normal user to Domain Admin.",
+          ["BloodHound", "Impacket", "Kerberoasting", "Mimikatz"],
+        ],
+        "Red Teaming": [
+          "Emulating a real adversary end to end, from initial access through persistence and lateral movement to objectives, while testing how well the defenders notice.",
+          ["C2 frameworks", "Phishing", "OPSEC", "Lateral movement"],
+        ],
+        "Penetration Testing": [
+          "Structured, authorised testing of systems and applications to find and prove exploitable weaknesses, then reporting them clearly with fixes.",
+          ["Methodology", "Metasploit", "Burp Suite", "Reporting"],
+        ],
+        "Threat Hunting": [
+          "Proactively searching logs and telemetry for attackers who slipped past automated detection, starting from a hypothesis rather than an alert.",
+          ["Hypotheses", "MITRE ATT&CK", "Sigma", "Log analysis"],
+        ],
+        "Security Analysis": [
+          "Examining alerts, logs and artefacts to work out what actually happened, how serious it is and what should be done about it.",
+          ["Log review", "Triage", "Correlation", "Wireshark"],
+        ],
+        "Vulnerability Analysis": [
+          "Finding, validating and prioritising weaknesses in software and infrastructure, separating real risk from scanner noise.",
+          ["Nessus", "OpenVAS", "CVSS", "CVE research"],
+        ],
+        "Threat Management": [
+          "Tracking threats and acting on them: understanding adversary behaviour, using intelligence and deciding which risks need attention first.",
+          ["Threat intel", "IOCs", "MITRE ATT&CK", "Risk"],
+        ],
+        "Digital Forensics": [
+          "Collecting and analysing evidence from disks, memory and logs to reconstruct an incident while keeping that evidence trustworthy.",
+          ["Autopsy", "Volatility", "Timelines", "Disk imaging"],
+        ],
+        "Web Security": [
+          "Finding and exploiting flaws in web applications, from injection and broken access control to authentication and logic bugs.",
+          ["Burp Suite", "SQLi", "XSS", "SSRF"],
+        ],
+        Exploitation: [
+          "Taking a discovered vulnerability and turning it into working access, whether with public exploits, modified code or a hand-built chain.",
+          ["Metasploit", "Exploit-DB", "Payloads", "Shells"],
+        ],
+        "Detection Engineering": [
+          "Writing and tuning the rules that catch attacker behaviour, and testing them so they fire on real attacks without drowning analysts in false positives.",
+          ["Sigma", "YARA", "SIEM rules", "ATT&CK mapping"],
+        ],
+        OSINT: [
+          "Gathering information about people, organisations and infrastructure from public sources to build a picture of a target or verify a lead.",
+          ["Recon", "Google dorks", "Shodan", "WHOIS"],
+        ],
+        "Pwn / Binary Exploitation": [
+          "Abusing memory-safety bugs in compiled programs to hijack execution, from stack overflows to ROP chains and format string attacks.",
+          ["pwntools", "GDB", "ROP", "Buffer overflow"],
+        ],
+        "Reverse Engineering": [
+          "Taking a compiled program apart to learn what it does without the source code, reading assembly and decompiled output along the way.",
+          ["Ghidra", "IDA", "Assembly", "Debugging"],
+        ],
+        Cryptography: [
+          "Understanding how encryption, hashing and signatures work and where implementations or usage go wrong, so weak schemes can be broken.",
+          ["RSA", "AES", "Hashing", "CyberChef"],
+        ],
+        "AI Red Teaming": [
+          "Probing AI and LLM systems for weaknesses such as prompt injection, jailbreaks, data leakage and unsafe tool use.",
+          ["Prompt injection", "Jailbreaks", "LLM threats", "Guardrails"],
+        ],
+        "Malware Analysis": [
+          "Studying malicious software to understand its behaviour, capabilities and indicators, using both static inspection and safe execution.",
+          ["Sandboxing", "Static analysis", "Strings", "Procmon"],
+        ],
+        "Analyst Incident Response": [
+          "Handling a security incident from detection through containment, eradication and recovery, and documenting what was learned.",
+          ["Containment", "Playbooks", "Triage", "Post-mortem"],
+        ],
+        "Identity Security": [
+          "Protecting and attacking the systems that decide who can access what: authentication, SSO, access policies and credential hygiene.",
+          ["IAM", "MFA", "SSO", "Least privilege"],
+        ],
+      };
+
       /* ════════ NAV LOGIC ════════ */
 
       const VIEWS = [
@@ -2552,6 +2905,7 @@
         "projects",
         "writeups",
         "achievements",
+        "skills",
         "timeline",
         "terminal",
         "attackpath",
@@ -2561,6 +2915,7 @@
         projects: "Access Log \u00B7 Projects",
         writeups: "Access Log \u00B7 Writeups",
         achievements: "Access Log \u00B7 Achievements",
+        skills: "Access Log \u00B7 Skills Matrix",
         timeline: "Access Log \u00B7 Timeline",
         terminal: "Access Log \u00B7 Terminal",
         attackpath: "Access Log \u00B7 Attack Path",
@@ -2626,6 +2981,272 @@
         "$ ls writeups/  ->  KoTH writeups.",
       );
       renderList("list-achievements", ACHIEVEMENTS, "No achievements yet.");
+
+      let skCurrent = -1;
+      let skDots = [];
+      let skOpen = () => {};
+      let skClose = () => {};
+
+      function renderSkills(id, items, max) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.getElementById(id);
+        const readout = document.getElementById("radar-readout");
+        const defaultMsg = readout.textContent;
+        svg.textContent = "";
+        const CX = 550,
+          CY = 440,
+          R = 300,
+          n = items.length;
+        const el = (name, attrs, parent) => {
+          const e = document.createElementNS(NS, name);
+          for (const k in attrs) e.setAttribute(k, attrs[k]);
+          (parent || svg).appendChild(e);
+          return e;
+        };
+        const ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+        const pt = (i, v) => [
+          CX + Math.cos(ang(i)) * R * v,
+          CY + Math.sin(ang(i)) * R * v,
+        ];
+
+        // rings
+        [0.25, 0.5, 0.75, 1].forEach((f) => {
+          const pts = items.map((_, i) => pt(i, f).join(",")).join(" ");
+          el("polygon", {
+            points: pts,
+            class: "radar-ring" + (f === 1 ? " outer" : ""),
+          });
+        });
+        // axes
+        items.forEach((_, i) => {
+          const [x, y] = pt(i, 1);
+          el("line", { x1: CX, y1: CY, x2: x, y2: y, class: "radar-axis" });
+        });
+        // ring ticks
+        [0.25, 0.5, 0.75, 1].forEach((f) => {
+          const t = el("text", {
+            x: CX + 5,
+            y: CY - R * f - 3,
+            class: "radar-tick",
+          });
+          t.textContent = String(Math.round(max * f));
+        });
+
+        // labels
+        const labels = items.map((it, i) => {
+          const a = ang(i);
+          const [x, y] = pt(i, 1);
+          const lx = x + Math.cos(a) * 16;
+          const ly = y + Math.sin(a) * 16 + 4;
+          const c = Math.cos(a);
+          const anchor =
+            Math.abs(c) < 0.15 ? "middle" : c > 0 ? "start" : "end";
+          const t = el("text", {
+            x: lx,
+            y: ly,
+            "text-anchor": anchor,
+            class: "radar-label",
+          });
+          t.textContent = it.title;
+          return t;
+        });
+
+        // data shape
+        const shape = el("g", { class: "radar-shape" });
+        const val = (it) => Math.max(0, Math.min(1, it.score / max));
+        el(
+          "polygon",
+          {
+            points: items.map((it, i) => pt(i, val(it)).join(",")).join(" "),
+            class: "radar-area",
+          },
+          shape,
+        );
+        const dots = items.map((it, i) => {
+          const [x, y] = pt(i, val(it));
+          const d = el(
+            "circle",
+            { cx: x, cy: y, r: 4.5, class: "radar-dot" },
+            shape,
+          );
+          const hit = el(
+            "circle",
+            { cx: x, cy: y, r: 14, class: "radar-hit" },
+            shape,
+          );
+          const on = () => {
+            dots.forEach((q, j) => {
+              q.classList.toggle("active", j === i);
+              labels[j].classList.toggle("active", j === i);
+            });
+            readout.textContent = "";
+            const b = document.createElement("b");
+            b.textContent = it.title;
+            readout.append(b, " \u00B7 " + it.score + "/" + max);
+          };
+          const off = () => {
+            dots.forEach((q, j) => {
+              q.classList.remove("active");
+              labels[j].classList.remove("active");
+            });
+            readout.textContent = defaultMsg;
+          };
+          hit.addEventListener("mouseenter", on);
+          hit.addEventListener("mouseleave", off);
+          const toggle = () => (skCurrent === i ? skClose() : skOpen(i));
+          hit.addEventListener("click", toggle);
+          labels[i].style.cursor = "pointer";
+          labels[i].addEventListener("click", toggle);
+          labels[i].addEventListener("mouseenter", on);
+          labels[i].addEventListener("mouseleave", off);
+          return d;
+        });
+        skDots = dots;
+
+        /* ── expandable popup (same box as the attack path) ── */
+        const stage = document.getElementById("sk-stage");
+        const pop = document.getElementById("sk-pop");
+        const scrim = document.getElementById("sk-scrim");
+        const mk = (tag, cls, text) => {
+          const n = document.createElement(tag);
+          if (cls) n.className = cls;
+          if (text != null) n.textContent = text;
+          return n;
+        };
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+
+        function build(i) {
+          const it = items[i];
+          const info = SKILL_INFO[it.title] || ["", []];
+          let k = 0;
+          const stag = (n) => {
+            n.classList.add("ap-in");
+            n.style.setProperty("--i", k++);
+            return n;
+          };
+          pop.textContent = "";
+
+          const top = stag(mk("div", "ap-pop-top"));
+          top.appendChild(
+            mk(
+              "span",
+              "ap-step",
+              "Skill " +
+                String(i + 1).padStart(2, "0") +
+                " / " +
+                String(items.length).padStart(2, "0"),
+            ),
+          );
+          const close = mk("button", "ap-close", "\u00d7");
+          close.type = "button";
+          close.setAttribute("aria-label", "Close");
+          close.addEventListener("click", close_);
+          top.appendChild(close);
+
+          const line = stag(mk("div", "sk-score-line"));
+          const pct = Math.round((it.score / max) * 100);
+          const sc = mk("span", null, "Score ");
+          sc.appendChild(mk("b", null, it.score + "/" + max));
+          line.append(sc, mk("span", null, pct + "%"));
+          const meter = stag(mk("div", "sk-meter"));
+          const fill = mk("i");
+          fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+          meter.appendChild(fill);
+
+          const tools = mk("div", "ap-tools");
+          info[1].forEach((t) => tools.appendChild(mk("span", "ap-tool", t)));
+
+          const nav = stag(mk("div", "ap-nav"));
+          const prev = mk("button", null, "< prev");
+          const next = mk("button", null, "next >");
+          prev.type = next.type = "button";
+          prev.disabled = i === 0;
+          next.disabled = i === items.length - 1;
+          prev.addEventListener("click", () => open_(i - 1));
+          next.addEventListener("click", () => open_(i + 1));
+          nav.append(prev, next);
+
+          pop.append(
+            top,
+            stag(mk("h3", "ap-q", it.title)),
+            stag(mk("p", "ap-desc", info[0])),
+            line,
+            meter,
+            stag(mk("div", "ap-tools-label", "Related topics")),
+            stag(tools),
+            nav,
+          );
+          return close;
+        }
+
+        function open_(i, fromKeyboard) {
+          if (i < 0 || i >= items.length) return;
+          skCurrent = i;
+          dots.forEach((q, j) => q.classList.toggle("active", j === i));
+          labels.forEach((l, j) => l.classList.toggle("active", j === i));
+
+          pop.classList.remove("open");
+          const closeBtn = build(i);
+
+          const sR = stage.getBoundingClientRect();
+          const nR = dots[i].getBoundingClientRect();
+          const cx = nR.left + nR.width / 2 - sR.left;
+          const cy = nR.top + nR.height / 2 - sR.top;
+          const W = pop.offsetWidth,
+            H = pop.offsetHeight,
+            m = 12,
+            gap = nR.height / 2 + 12;
+          const left = clamp(cx - W / 2, m, Math.max(m, sR.width - W - m));
+          let topPx = cy + gap;
+          if (topPx + H > sR.height - m) topPx = cy - gap - H;
+          topPx = clamp(topPx, m, Math.max(m, sR.height - H - m));
+          pop.style.left = left + "px";
+          pop.style.top = topPx + "px";
+          pop.style.transformOrigin = cx - left + "px " + (cy - topPx) + "px";
+
+          void pop.offsetWidth;
+          stage.classList.add("open");
+          pop.classList.add("open");
+          readout.textContent = defaultMsg;
+          if (fromKeyboard) closeBtn.focus({ preventScroll: true });
+        }
+
+        function close_() {
+          if (skCurrent < 0) return;
+          skCurrent = -1;
+          stage.classList.remove("open");
+          pop.classList.remove("open");
+          dots.forEach((q) => q.classList.remove("active"));
+          labels.forEach((l) => l.classList.remove("active"));
+        }
+
+        skOpen = open_;
+        skClose = close_;
+        scrim.addEventListener("click", close_);
+        document.addEventListener("keydown", (e) => {
+          if (document.getElementById("view-skills").hidden) return;
+          if (e.key === "Escape") return close_();
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+          const dir = e.key === "ArrowRight" ? 1 : -1;
+          e.preventDefault();
+          if (skCurrent < 0) open_(dir === 1 ? 0 : items.length - 1);
+          else open_(skCurrent + dir);
+        });
+      }
+
+      function animateSkills() {
+        const shape = document.querySelector("#radar-skills .radar-shape");
+        if (!shape) return;
+        shape.classList.remove("in");
+        void shape.getBoundingClientRect();
+        requestAnimationFrame(() => shape.classList.add("in"));
+      }
+
+      renderSkills("radar-skills", SKILLS, SKILLS_MAX);
+      window.__skillsAnimate = animateSkills;
+      window.__skClose = () => skClose();
+
       function renderWriteups(id, items, emptyMsg) {
         const root = document.getElementById(id);
         root.textContent = "";
@@ -2824,17 +3445,6 @@
               'NAME="PenguinOS"\nVERSION="1.0 (Arctic)"\nID=penguinos\nID_LIKE=debian\nPRETTY_NAME="PenguinOS 1.0 (Arctic)"',
           },
         };
-
-        const ART = [
-          "        .---.",
-          "       /     \\",
-          "       \\.@-@./",
-          "       /`\\_/`\\",
-          "      //  _  \\\\",
-          "     | \\     )|_",
-          "    /`\\_`>  <_/ \\",
-          "    \\__/'---'\\__/",
-        ];
 
         const HELP = [
           "PenguinOS shell, version 1.0.0(1)-release",
@@ -3086,7 +3696,7 @@
           wrap.className = "ff";
           const art = document.createElement("pre");
           art.className = "ff-art";
-          art.textContent = ART.join("\n");
+          art.textContent = PENGUIN_ART.join("\n");
           const info = document.createElement("pre");
           info.innerHTML = html;
           wrap.append(art, info);
@@ -3603,6 +4213,7 @@
       function show(name) {
         if (!VIEWS.includes(name)) name = "home";
         if (window.__apClose) window.__apClose();
+        if (window.__skClose) window.__skClose();
         VIEWS.forEach((v) => {
           document.getElementById("view-" + v).hidden = v !== name;
         });
@@ -3610,7 +4221,10 @@
           .querySelector(".card")
           .classList.toggle(
             "wide",
-            name === "writeups" || name === "terminal" || name === "attackpath",
+            name === "writeups" ||
+              name === "skills" ||
+              name === "terminal" ||
+              name === "attackpath",
           );
         document.getElementById("tagline").textContent = TAGLINES[name];
         menu.querySelectorAll("a").forEach((a) => {
@@ -3619,6 +4233,8 @@
           else a.removeAttribute("aria-current");
         });
         if (name === "timeline" && window.__tlReplay) window.__tlReplay();
+        if (name === "skills" && window.__skillsAnimate)
+          window.__skillsAnimate();
         if (name === "terminal" && window.__shFocus) window.__shFocus();
         if (name === "home" && window.__shReset) window.__shReset();
         setMenu(false);
@@ -3644,6 +4260,73 @@
       );
       window.addEventListener("hashchange", () => show(location.hash.slice(1)));
       show(location.hash.slice(1));
+
+      /* ════════ BOOT SEQUENCE ════════ */
+      (function bootSequence() {
+        const boot = document.getElementById("bootScreen");
+        if (!boot) return;
+
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        let alreadyBooted = false;
+        try {
+          alreadyBooted = sessionStorage.getItem("booted") === "1";
+        } catch (e) {}
+
+        if (reduceMotion || alreadyBooted) {
+          boot.remove();
+          return;
+        }
+
+        document.body.classList.add("boot-lock");
+        document.getElementById("bootArt").textContent = PENGUIN_ART.join("\n");
+
+        const logEl = document.getElementById("bootLog");
+        const LINES = [
+          "Starting PenguinOS 1.0 (Arctic)...",
+          "Mounting /home/0x7f3a...",
+          "Loading modules: pwn, privesc, redteam...",
+          "Establishing uplink to Antarctic Station Node...",
+          "Decrypting profile.dat...",
+          "Authenticating operator: 0x7f3a...",
+          "Welcome, 0x7f3a.",
+        ];
+
+        let i = 0;
+        let timer = null;
+
+        function finish() {
+          if (timer) clearTimeout(timer);
+          document.removeEventListener("keydown", finish);
+          document.removeEventListener("click", finish);
+          boot.classList.add("hide");
+          document.body.classList.remove("boot-lock");
+          try {
+            sessionStorage.setItem("booted", "1");
+          } catch (e) {}
+          setTimeout(() => boot.remove(), 520);
+        }
+
+        function next() {
+          if (i >= LINES.length) {
+            timer = setTimeout(finish, 350);
+            return;
+          }
+          const row = document.createElement("div");
+          const ok = document.createElement("span");
+          ok.className = "ok";
+          ok.textContent = "[ OK ]";
+          row.append(ok, document.createTextNode(" " + LINES[i]));
+          logEl.appendChild(row);
+          i++;
+          timer = setTimeout(next, 220);
+        }
+
+        document.addEventListener("keydown", finish);
+        document.addEventListener("click", finish);
+        next();
+      })();
     </script>
   </body>
 </html>
