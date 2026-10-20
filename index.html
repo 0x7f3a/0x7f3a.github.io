@@ -3420,7 +3420,9 @@
         let root = false,
           cwd = HOME,
           hist = [],
-          hi = 0;
+          hi = 0,
+          remote = null, // {user, host, root} while "ssh"'d into king-server
+          pending = null; // {type:'ssh-password', user, host, password} while awaiting input
 
         const FS = {
           "/": {},
@@ -3432,7 +3434,7 @@
           [HOME]: {
             "flag.txt": "flag{y0u_f0und_m3_0x7f3a}",
             "notes.txt":
-              "todo: own the next KoTH box\nrule #1: never reuse a shell",
+              "todo: own the next KoTH box\nrule #1: never reuse a shell\nps: a default nmap scan doesn't check every port...",
             "README.md": "Welcome to PenguinOS. Try: help",
           },
           "/root": {
@@ -3458,8 +3460,8 @@
           "  echo date uname uptime hostname history clear",
           "",
           "  pentest toolkit (sandboxed, cosmetic only):",
-          "  nmap rustscan gobuster ffuf nikto sqlmap",
-          "  hydra john hashcat aircrack-ng gdb msfconsole",
+          "  nmap rustscan gobuster ffuf nikto sqlmap curl",
+          "  hydra john hashcat aircrack-ng gdb msfconsole ssh",
         ].join("\n");
 
         const CMDS = Object.create(null);
@@ -3472,15 +3474,21 @@
           return cwd.startsWith(h + "/") ? "~" + cwd.slice(h.length) : cwd;
         }
         const promptStr = () =>
-          (root ? "root" : USER) +
-          "@" +
-          HOST +
-          ":" +
-          shown() +
-          (root ? "#" : "$");
+          remote
+            ? (remote.root ? "root" : remote.user) +
+              "@" +
+              remote.host +
+              ":~" +
+              (remote.root ? "#" : "$")
+            : (root ? "root" : USER) +
+              "@" +
+              HOST +
+              ":" +
+              shown() +
+              (root ? "#" : "$");
         function upd() {
           pEl.textContent = promptStr();
-          pEl.classList.toggle("root", root);
+          pEl.classList.toggle("root", root || (remote && remote.root));
         }
         function resolve(p) {
           if (p === "~" || p.startsWith("~/")) p = homeDir() + p.slice(1);
@@ -3801,6 +3809,17 @@
           },
         ];
 
+        const HIDDEN_PORT = {
+          port: 8081,
+          service: "http-alt",
+          version: "nginx 1.24.0 (dev panel \u2014 do not expose)",
+          scripts: [
+            "| http-title: dev-panel",
+            "|_http-server-header: nginx/1.24.0",
+          ],
+        };
+        const SSH_PASSWORD = "ic3_c0ld_2026";
+
         CMDS.nmap = (a) => {
           const { flags, values, target } = parseArgs(a, [
             "-p",
@@ -3820,15 +3839,18 @@
           const wantOS = aggressive || flags.has("-O");
           const noDNS = flags.has("-n");
           const skipDiscovery = flags.has("-Pn");
+          const allPorts = flags.has("-p-");
 
           let ports = NMAP_PORTS;
-          if (values["-p"]) {
+          if (allPorts) {
+            ports = NMAP_PORTS.concat(HIDDEN_PORT);
+          } else if (values["-p"]) {
             const spec = values["-p"];
-            ports =
-              spec === "-"
-                ? NMAP_PORTS
-                : NMAP_PORTS.filter((p) => matchPortSpec(spec, p.port));
+            ports = NMAP_PORTS.concat(HIDDEN_PORT).filter((p) =>
+              matchPortSpec(spec, p.port),
+            );
           }
+          const totalScanned = allPorts ? 65535 : 1000;
 
           const lines = [
             "Starting Nmap 7.95 ( https://nmap.org ) at " +
@@ -3854,17 +3876,20 @@
           } else {
             lines.push(
               "Not shown: " +
-                (1000 - ports.length) +
+                (totalScanned - ports.length) +
                 " closed tcp ports (reset)",
               "PORT     STATE SERVICE" + (wantVersion ? "  VERSION" : ""),
             );
             ports.forEach((p) => {
-              lines.push(
+              let line =
                 String(p.port + "/tcp").padEnd(9) +
-                  "open  " +
-                  p.service.padEnd(9) +
-                  (wantVersion ? p.version : ""),
-              );
+                "open  " +
+                p.service.padEnd(9) +
+                (wantVersion ? p.version : "");
+              if (p.port === 8081)
+                line +=
+                  (wantVersion ? "  " : " ") + "# flag{p0rt_8081_a1nt_h1dd3n}";
+              lines.push(line);
               if (wantScripts && p.scripts.length) lines.push(...p.scripts);
             });
           }
@@ -3889,7 +3914,12 @@
           lines.push(
             "",
             "Nmap done: 1 IP address (1 host up) scanned in " +
-              (4.82 + ports.length * 1.3 + (wantScripts ? 3.1 : 0)).toFixed(2) +
+              (
+                4.82 +
+                ports.length * 1.3 +
+                (wantScripts ? 3.1 : 0) +
+                (allPorts ? 18.4 : 0)
+              ).toFixed(2) +
               " seconds",
           );
           print(lines.join("\n"));
@@ -3975,13 +4005,21 @@
           const exts = (values["-x"] || "").split(",").filter(Boolean);
           const wordlist =
             values["-w"] || "/usr/share/wordlists/dirb/common.txt";
-          const hits = [
+          let hits = [
             ["/admin", 301, 178],
             ["/backup", 403, 153],
             ["/index.html", 200, 2214],
             ["/robots.txt", 200, 42],
             ["/uploads", 301, 178],
           ];
+          if (url.includes(":8081")) {
+            hits = [
+              ["/", 200, 612],
+              ["/login", 200, 884],
+              ["/dev-notes.txt", 200, 311],
+              ["/static", 301, 178],
+            ];
+          }
           if (exts.length) hits.push(["/config." + exts[0], 200, 341]);
           const lines = [
             "===============================================================",
@@ -4076,6 +4114,38 @@
               "+ 7863 requests: 0 error(s) and 4 item(s) reported on remote host",
               "+ End Time:           " + new Date().toString() + " (9 seconds)",
             ].join("\n"),
+          );
+        };
+
+        /* ── curl ─────────────────────────────────────────────── */
+        const CURL_ROUTES = {
+          [TARGET_IP + "/"]:
+            "<!doctype html><html><head><title>King Server</title></head><body><h1>It works!</h1></body></html>",
+          [TARGET_IP + ":8081/"]:
+            "<!doctype html><html><head><title>dev-panel</title></head><body><p>internal use only</p></body></html>",
+          [TARGET_IP + ":8081/dev-notes.txt"]: [
+            "# dev notes -- remove before prod!!",
+            "TODO: rotate creds, again",
+            "user: admin",
+            "pw hint: cold-themed, 2026 edition. crack it with hydra against the 8081 panel.",
+            "",
+            "flag{d3v_n0t3s_l3ak3d}",
+          ].join("\n"),
+        };
+        CMDS.curl = (a) => {
+          const { positional } = parseArgs(a, ["-H", "-X", "-d", "-o"]);
+          const url = positional[0];
+          if (!url)
+            return print("curl: try 'curl --help' for more information");
+          const noProto = url.replace(/^[a-z]+:\/\//i, "");
+          const key = Object.keys(CURL_ROUTES).find(
+            (k) => noProto.replace(/\/$/, "") === k.replace(/\/$/, ""),
+          );
+          if (key) return print(CURL_ROUTES[key]);
+          print(
+            "curl: (7) Failed to connect to " +
+              noProto.split("/")[0] +
+              ": Connection refused",
           );
         };
 
@@ -4197,46 +4267,61 @@
             "-s",
             "-t",
           ]);
+          const raw = a.join(" ");
+          const chainMode = raw.includes("8081");
           const svcMatch = positional.find((x) => /^[a-z-]+:\/\//.test(x));
-          const service =
-            (svcMatch && svcMatch.split("://")[0]) ||
-            positional.find((x) => Object.keys(HYDRA_CREDS).includes(x)) ||
-            "ssh";
-          const tgt =
-            (svcMatch && stripProto(svcMatch)) ||
-            positional.find((x) => x !== service) ||
-            TARGET_IP;
-          const port =
-            values["-s"] ||
-            { ssh: 22, ftp: 21, telnet: 23, smb: 445, "http-post-form": 80 }[
-              service
-            ] ||
-            22;
-          const [user, pass] = HYDRA_CREDS[service] || HYDRA_CREDS.ssh;
+          const service = chainMode
+            ? "http-post-form"
+            : (svcMatch && svcMatch.split("://")[0]) ||
+              positional.find((x) => Object.keys(HYDRA_CREDS).includes(x)) ||
+              "ssh";
+          const tgt = chainMode
+            ? TARGET_IP
+            : (svcMatch && stripProto(svcMatch)) ||
+              positional.find((x) => x !== service) ||
+              TARGET_IP;
+          const port = chainMode
+            ? 8081
+            : values["-s"] ||
+              { ssh: 22, ftp: 21, telnet: 23, smb: 445, "http-post-form": 80 }[
+                service
+              ] ||
+              22;
+          const [user, pass] = chainMode
+            ? ["admin", SSH_PASSWORD]
+            : HYDRA_CREDS[service] || HYDRA_CREDS.ssh;
           const loginLabel = values["-l"] || user;
-          print(
-            [
-              "Hydra v9.5 (c) 2023 by van Hauser/THC - for legal purposes only",
-              "",
-              "Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at " +
-                new Date().toTimeString().slice(0, 8),
-              "[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries",
-              "[DATA] attacking " + service + "://" + tgt + ":" + port + "/",
-              "[STATUS] 812.00 tries/min, 812 tries in 00:01h",
-              "[" +
-                port +
-                "][" +
-                service +
-                "] host: " +
-                tgt +
-                "   login: " +
-                loginLabel +
-                "   password: " +
-                pass,
-              "1 of 1 target successfully completed, 1 valid password found",
-              "Hydra finished at " + new Date().toTimeString().slice(0, 8),
-            ].join("\n"),
+          const lines = [
+            "Hydra v9.5 (c) 2023 by van Hauser/THC - for legal purposes only",
+            "",
+            "Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at " +
+              new Date().toTimeString().slice(0, 8),
+            "[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries",
+            "[DATA] attacking " +
+              service +
+              "://" +
+              tgt +
+              ":" +
+              port +
+              (chainMode ? "/login" : "/"),
+            "[STATUS] 812.00 tries/min, 812 tries in 00:01h",
+            "[" +
+              port +
+              "][" +
+              service +
+              "] host: " +
+              tgt +
+              "   login: " +
+              loginLabel +
+              "   password: " +
+              pass,
+            "1 of 1 target successfully completed, 1 valid password found",
+          ];
+          if (chainMode) lines.push("", "[+] flag{cr3ds_crack3d_w1th_hydra}");
+          lines.push(
+            "Hydra finished at " + new Date().toTimeString().slice(0, 8),
           );
+          print(lines.join("\n"));
         };
 
         /* ── john ─────────────────────────────────────────────── */
@@ -4398,12 +4483,144 @@
         };
         CMDS.metasploit = CMDS.msfconsole;
 
+        /* ── ssh (drops into a second, remote fake shell) ──────── */
+        CMDS.ssh = (a) => {
+          const { positional } = parseArgs(a, ["-p", "-i"]);
+          const argTok = positional[0] || "";
+          let user, host;
+          if (argTok.includes("@")) [user, host] = argTok.split("@");
+          else {
+            user = USER;
+            host = argTok;
+          }
+          if (!host) return print("usage: ssh [user@]host");
+          const knownHost = host === TARGET_IP || host === TARGET_HOST;
+          if (!knownHost)
+            return print(
+              "ssh: Could not resolve hostname " +
+                host +
+                ": Name or service not known",
+            );
+          if (user !== "admin") {
+            print(user + "@" + host + "'s password:");
+            print("Permission denied (publickey,password).");
+            return;
+          }
+          print(user + "@" + host + "'s password:");
+          pending = {
+            type: "ssh-password",
+            user,
+            host: TARGET_HOST,
+            password: SSH_PASSWORD,
+          };
+          inp.type = "password";
+        };
+
+        /* ── commands handled while inside the remote (king-server) session ── */
+        function runRemote(a, line) {
+          const cmd = a[0];
+          if (cmd === "whoami")
+            return print(remote.root ? "root" : remote.user);
+          if (cmd === "id")
+            return print(
+              remote.root
+                ? "uid=0(root) gid=0(root) groups=0(root)"
+                : "uid=1001(admin) gid=1001(admin) groups=1001(admin),27(sudo)",
+            );
+          if (cmd === "pwd")
+            return print(remote.root ? "/root" : "/home/admin");
+          if (cmd === "ls")
+            return print(remote.root ? "root.txt" : "notes.txt");
+          if (cmd === "cat") {
+            const f = a[1];
+            if (!f) return;
+            if (f === "notes.txt")
+              return print(
+                "reminder: rotate the dev-panel creds (never did, lol)\nping: king",
+              );
+            if (f === "root.txt")
+              return remote.root
+                ? print("flag{gtfo_v1a_v1m_as_r00t}")
+                : print("cat: root.txt: Permission denied");
+            return print("cat: " + f + ": No such file or directory");
+          }
+          if (cmd === "sudo") {
+            const args = a.slice(1);
+            if (args[0] === "-l")
+              return print(
+                [
+                  "Matching Defaults entries for admin on king-server:",
+                  "    env_reset, mail_badpass,",
+                  "    secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                  "",
+                  "User admin may run the following commands on king-server:",
+                  "    (ALL) NOPASSWD: /usr/bin/vim",
+                ].join("\n"),
+              );
+            if (args[0] === "vim") {
+              if (remote.root) return print("admin is already root.");
+              remote.root = true;
+              upd();
+              return print(
+                [
+                  "~ vim 9.1 ~",
+                  ":!/bin/sh",
+                  "",
+                  "# whoami",
+                  "root",
+                  "",
+                  "[+] Escaped vim via the sudo NOPASSWD misconfig (GTFOBins) \u2014 you are root on king-server.",
+                  "",
+                  "flag{gtfo_v1a_v1m_as_r00t}",
+                ].join("\n"),
+              );
+            }
+            return print("sudo: " + (args[0] || "") + ": command not found");
+          }
+          if (cmd === "exit") {
+            print("logout");
+            print("Connection to " + remote.host + " closed.");
+            remote = null;
+            upd();
+            return;
+          }
+          if (cmd === "clear") return (out.textContent = "");
+          if (cmd === "help")
+            return print(
+              "Remote session on king-server.\nTry: whoami  id  pwd  ls  cat <file>  sudo -l  sudo vim  exit",
+            );
+          print("bash: " + cmd + ": command not found");
+        }
+
         function run(raw) {
+          if (pending && pending.type === "ssh-password") {
+            const wasMasked = inp.type === "password";
+            inp.type = "text";
+            echo(wasMasked ? "*".repeat(raw.length) : raw);
+            if (raw === pending.password) {
+              remote = { user: pending.user, host: pending.host, root: false };
+              print(
+                "Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.5.0-41-generic x86_64)",
+              );
+              print(
+                "Last login: " +
+                  new Date().toDateString() +
+                  " from " +
+                  TARGET_IP,
+              );
+            } else {
+              print("Permission denied, please try again.");
+            }
+            pending = null;
+            upd();
+            return;
+          }
           echo(raw);
           const line = raw.trim();
           if (!line) return;
           hist.push(line);
           const a = line.split(/\s+/);
+          if (remote) return runRemote(a, line);
           if (CMDS[a[0]]) CMDS[a[0]](a.slice(1));
           else print("bash: " + a[0] + ": command not found");
         }
@@ -4469,6 +4686,9 @@
           cwd = HOME;
           hist = [];
           hi = 0;
+          remote = null;
+          pending = null;
+          inp.type = "text";
           inp.value = "";
           out.textContent = "";
           print(
