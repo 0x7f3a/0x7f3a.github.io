@@ -3040,7 +3040,7 @@
           const ly = y + Math.sin(a) * 16 + 4;
           const c = Math.cos(a);
           const anchor =
-            Math.abs(c) < 0.15 ? "middle" : c > 0 ? "start" : "end";
+            Math.abs(c) < 0.02 ? "middle" : c > 0 ? "start" : "end";
           const t = el("text", {
             x: lx,
             y: ly,
