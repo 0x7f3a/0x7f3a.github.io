@@ -2711,12 +2711,60 @@
           title: "How to be king",
           desc: "A persistence loop for king.txt-style KoTH challenges: strips the immutable/append-only attribute, overwrites the file with your name, then re-locks it with chattr so other players can't silently take it back.",
           tags: ["KoTH", "Persistence"],
-          log: String.raw`while true; do
-                chattr -ia /root/king.txt 2>/dev/null
-                echo 0x7f3a > /root/king.txt 2>/dev/null
-                chattr +ia /root/king.txt 2>/dev/null
-                sleep 0.1
-            done`,
+          log: String.raw`Linux Version
+cat > /tmp/defend.sh << 'EOF'
+#!/bin/bash
+
+# ==== EDIT THESE FOR EACH MACHINE ====
+USERNAME="0x7f3a"
+KING_FILE="/root/king.txt"
+# ======================================
+
+while true; do
+    current=$(cat "$KING_FILE" 2>/dev/null)
+    attrs=$(lsattr "$KING_FILE" 2>/dev/null | awk '{print $1}')
+
+    if [ "$current" != "$USERNAME" ]; then
+        if [ -w "$KING_FILE" ]; then
+            chattr -ia "$KING_FILE" 2>/dev/null
+            echo "$USERNAME" > "$KING_FILE" 2>/dev/null
+            chattr +ia "$KING_FILE" 2>/dev/null
+            echo "[$(date +%T)] reclaimed $KING_FILE (was: $current, attrs: $attrs)"
+        else
+            echo "[$(date +%T)] locked out — not writable (attrs: $attrs)"
+        fi
+    fi
+    sleep 0.1
+done
+EOF
+chmod +x /tmp/defend.sh
+/tmp/defend.sh
+
+Windows Version
+@'
+# ==== EDIT THESE FOR EACH MACHINE ====
+$Username = "0x7f3a"
+$KingFile = "C:\king.txt"
+# ======================================
+
+while ($true) {
+    $current = Get-Content $KingFile -ErrorAction SilentlyContinue
+
+    if ($current -ne $Username) {
+        try {
+            icacls $KingFile /reset | Out-Null
+            $Username | Out-File -FilePath $KingFile -Encoding ascii -Force
+            icacls $KingFile /inheritance:r /grant:r "$env:USERNAME:(F)" /deny "Everyone:(W)" | Out-Null
+            Write-Host "$(Get-Date -Format T) reclaimed $KingFile (was: $current)"
+        } catch {
+            Write-Host "$(Get-Date -Format T) locked out - $($_.Exception.Message)"
+        }
+    }
+    Start-Sleep -Milliseconds 100
+}
+'@ | Out-File -FilePath C:\defend.ps1 -Encoding ascii
+
+powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         },
       ];
 
