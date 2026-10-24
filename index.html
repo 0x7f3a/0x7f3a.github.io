@@ -2936,20 +2936,20 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           ["Sigma", "YARA", "SIEM rules", "ATT&CK mapping"],
         ],
         OSINT: [
-          "Gathering information about people, organisations and infrastructure from public sources to build a picture of a target or verify a lead.",
-          ["Recon", "Google dorks", "Shodan", "WHOIS"],
+          "Building a picture of a person, organisation or network from public sources alone: pivoting between usernames, domains, imagery and infrastructure, and cross-checking each lead until it holds up.",
+          ["Pivoting", "Shodan / Censys", "Username enum", "Geolocation"],
         ],
         "Pwn / Binary Exploitation": [
-          "Abusing memory-safety bugs in compiled programs to hijack execution, from stack overflows to ROP chains and format string attacks.",
-          ["pwntools", "GDB", "ROP", "Buffer overflow"],
+          "Turning memory-corruption bugs into code execution against modern mitigations: ret2libc and ROP chains around NX, address leaks to beat ASLR and PIE, format string primitives and heap exploitation.",
+          ["pwntools", "ROP / ret2libc", "Format strings", "Heap"],
         ],
         "Reverse Engineering": [
-          "Taking a compiled program apart to learn what it does without the source code, reading assembly and decompiled output along the way.",
-          ["Ghidra", "IDA", "Assembly", "Debugging"],
+          "Taking compiled binaries apart without the source: recovering logic from disassembly and decompiled output, getting past anti-debugging and packing, and writing keygens, patches or solvers.",
+          ["Ghidra", "IDA", "Anti-debug", "angr / Z3"],
         ],
         Cryptography: [
-          "Understanding how encryption, hashing and signatures work and where implementations or usage go wrong, so weak schemes can be broken.",
-          ["RSA", "AES", "Hashing", "CyberChef"],
+          "Breaking crypto where the implementation or its usage is flawed rather than the maths: RSA attacks (small e, common modulus, Wiener), padding oracles, CBC bit-flipping and weak randomness.",
+          ["RSA attacks", "Padding oracle", "CBC / ECB", "SageMath"],
         ],
         "AI Red Teaming": [
           "Probing AI and LLM systems for weaknesses such as prompt injection, jailbreaks, data leakage and unsafe tool use.",
@@ -3507,6 +3507,8 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             "notes.txt":
               "todo: own the next KoTH box\nrule #1: never reuse a shell\nps: a default nmap scan doesn't check every port...",
             "README.md": "Welcome to PenguinOS. Try: help",
+            vuln: "\x7fELF [64-bit executable, binary data omitted]",
+            crackme: "\x7fELF [64-bit executable, binary data omitted]",
           },
           "/root": {
             "king.txt": "0x7f3a",
@@ -3538,6 +3540,9 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           "  pentest toolkit (sandboxed, cosmetic only):",
           "  nmap rustscan gobuster ffuf nikto sqlmap curl",
           "  hydra john hashcat aircrack-ng gdb msfconsole ssh",
+          "",
+          "  pwn / re / osint (canned output, binaries live in ~):",
+          "  checksec ropchain strings ltrace osint ./vuln ./crackme",
           "",
           "  autopwn       run the full recon\u2192exploit chain, scripted",
           "                (simulated, " + TARGET_IP + " only, flags redacted)",
@@ -4621,6 +4626,302 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             setTimeout(next, steps[i - 1] === "" ? 120 : 260);
           };
           next();
+        };
+
+        /* ── pwn / re / osint toolkit ─────────────────────────────
+           Same ground rules as autopwn: every line below is canned
+           text. Nothing is fetched, nothing is executed, no socket is
+           opened. The two "binaries" are just entries in the fake ~,
+           and the osint demo only ever profiles one fixed persona. */
+        const BINS = {
+          vuln: {
+            arch: "amd64-64-little",
+            relro: "Partial RELRO",
+            canary: "No canary found",
+            nx: "NX enabled",
+            pie: "No PIE (0x400000)",
+          },
+          crackme: {
+            arch: "amd64-64-little",
+            relro: "Full RELRO",
+            canary: "Canary found",
+            nx: "NX enabled",
+            pie: "PIE enabled",
+          },
+        };
+        const CRACK_KEY = "7f3a-R3V3RS3D";
+        const CRACK_FLAG = "flag{str1ngs_4nd_ltr4c3_w1n}";
+        const CRACK_BANNER = "[crackme v1.2] license check";
+        const OSINT_PERSONA = "0x7f3a";
+        const GCC_TAG = "GCC: (Ubuntu 13.2.0-23ubuntu4) 13.2.0";
+
+        // resolve an argument to one of the two demo binaries (or null)
+        function binOf(arg) {
+          if (!arg) return null;
+          const p = resolve(arg);
+          const n = p.slice(p.lastIndexOf("/") + 1);
+          if (parentOf(p) !== HOME) return null;
+          if (!Object.prototype.hasOwnProperty.call(BINS, n)) return null;
+          return Object.assign({ name: n, path: p }, BINS[n]);
+        }
+
+        // print lines one at a time, like autopwn does
+        function playLines(lines, gap) {
+          let i = 0;
+          const next = () => {
+            if (i >= lines.length) return;
+            print(lines[i]);
+            box.scrollTop = box.scrollHeight;
+            i++;
+            setTimeout(next, lines[i - 1] === "" ? 120 : gap);
+          };
+          next();
+        }
+
+        // glibc-style strcmp return value
+        function cmpStr(x, y) {
+          const n = Math.max(x.length, y.length);
+          for (let i = 0; i < n; i++) {
+            const cx = i < x.length ? x.charCodeAt(i) : 0;
+            const cy = i < y.length ? y.charCodeAt(i) : 0;
+            if (cx !== cy) return cx - cy;
+          }
+          return 0;
+        }
+
+        /* ── checksec ─────────────────────────────────────────── */
+        CMDS.checksec = (a) => {
+          const arg = a
+            .map((x) => x.replace(/^--file=/, ""))
+            .find((x) => x && x[0] !== "-");
+          if (!arg) return print("usage: checksec [--file=]<binary>");
+          const b = binOf(arg);
+          if (!b) {
+            const p = resolve(arg);
+            const d = parentOf(p);
+            const n = p.slice(p.lastIndexOf("/") + 1);
+            if (!denied(p) && FS[d] && FS[d][n] !== undefined)
+              return print("[ERROR] '" + arg + "' is not an ELF binary");
+            return print("[ERROR] Could not find file '" + arg + "'");
+          }
+          print(
+            [
+              "[*] '" + b.path + "'",
+              "    Arch:     " + b.arch,
+              "    RELRO:    " + b.relro,
+              "    Stack:    " + b.canary,
+              "    NX:       " + b.nx,
+              "    PIE:      " + b.pie,
+              "    Stripped: No",
+            ].join("\n"),
+          );
+        };
+
+        /* ── ropchain ─────────────────────────────────────────── */
+        CMDS.ropchain = (a) => {
+          const arg = a.find((x) => x[0] !== "-") || "./vuln";
+          const b = binOf(arg);
+          if (!b)
+            return print("ropchain: " + arg + ": no such target (try ./vuln)");
+          if (b.name !== "vuln")
+            return print(
+              "ropchain: " +
+                arg +
+                ": stack canary + PIE + full RELRO, so no plain ret2libc here.\n" +
+                "          leak the canary and a code pointer first (see `checksec " +
+                arg +
+                "`).",
+            );
+          playLines(
+            [
+              "[*] ropchain :: ret2libc builder (simulated, canned output)",
+              "[*] target  " + b.path + "  (NX on, no canary, no PIE)",
+              "",
+              "[1/4] offset    cyclic(200) \u2192 crash, rsp = 'faaaaaab' \u2192 offset = 72",
+              "[2/4] gadgets   ROPgadget --binary " + arg,
+              "                0x000000000040101a : ret",
+              "                0x00000000004011d3 : pop rdi ; ret",
+              "[3/4] leak      pop rdi ; puts@got ; puts@plt ; main",
+              "                puts = 0x00007f4a5b880ed0 \u2192 libc base = 0x00007f4a5b800000",
+              '[4/4] ret2libc  system("/bin/sh")',
+              "",
+              "payload (stage 2):",
+              "  'A' * 72",
+              "  0x000000000040101a   ret                 ; re-align rsp to 16 bytes",
+              "  0x00000000004011d3   pop rdi ; ret",
+              '  0x00007f4a5b9d8698   &"/bin/sh"          ; libc base + 0x1d8698',
+              "  0x00007f4a5b850d60   system              ; libc base + 0x50d60",
+              "",
+              "[+] chain built. nothing was executed; replay it yourself with pwntools.",
+            ],
+            240,
+          );
+        };
+
+        /* ── osint (fixed demo persona only, like autopwn's target) ── */
+        CMDS.osint = (a) => {
+          const h = a[0];
+          if (!h) return print("usage: osint <handle>");
+          if (h.toLowerCase() !== OSINT_PERSONA)
+            return print(
+              'osint: refusing handle "' +
+                h.slice(0, 32) +
+                '" \u2014 this simulator only ever profiles the demo persona ' +
+                OSINT_PERSONA +
+                ". no lookups are made, no packet leaves this browser.",
+            );
+          playLines(
+            [
+              "[*] osint :: scripted handle-pivot demo",
+              "[*] simulated only \u2014 canned output, no requests sent, persona fixed at " +
+                OSINT_PERSONA,
+              "",
+              "[1/5] username   sweep " + OSINT_PERSONA + " across 40 sites",
+              "                 3 hits (site names redacted in the demo)",
+              "[2/5] pivot      avatar hash reused on 2 of the 3 accounts",
+              "                 \u2192 same person, high confidence",
+              "[3/5] infra      linked domain \u2192 whois (privacy-protected) + crt.sh",
+              "                 certificate transparency: 1 forgotten subdomain",
+              "[4/5] imagery    exif check on 4 posted photos: GPS stripped, camera tag removed",
+              "                 \u2192 geolocation dead end",
+              "[5/5] correlate  post times, handle reuse and writing style merged into one timeline",
+              "",
+              "[+] verdict: pwn/RE-leaning CTF player, decent opsec. one reused avatar",
+              "    was the only thread. nothing personal surfaced, which is the point.",
+            ],
+            260,
+          );
+        };
+
+        /* ── strings ──────────────────────────────────────────── */
+        const STRINGS = {
+          crackme: [
+            "/lib64/ld-linux-x86-64.so.2",
+            "libc.so.6",
+            "puts",
+            "printf",
+            "strlen",
+            "strcmp",
+            "__libc_start_main",
+            "GLIBC_2.2.5",
+            "GLIBC_2.34",
+            CRACK_BANNER,
+            "usage: %s <key>",
+            CRACK_KEY,
+            "Access granted.",
+            "Access denied.",
+            GCC_TAG,
+          ],
+          vuln: [
+            "/lib64/ld-linux-x86-64.so.2",
+            "libc.so.6",
+            "setvbuf",
+            "puts",
+            "gets",
+            "printf",
+            "stdout",
+            "__libc_start_main",
+            "GLIBC_2.2.5",
+            "GLIBC_2.34",
+            "Enter your name: ",
+            "Hello, %s!",
+            "the `gets' function is dangerous and should not be used.",
+            GCC_TAG,
+          ],
+        };
+        CMDS.strings = (a) => {
+          const arg = a.find((x) => x[0] !== "-");
+          if (!arg) return print("Usage: strings [option(s)] [file(s)]");
+          const b = binOf(arg);
+          if (b) return print(STRINGS[b.name].join("\n"));
+          const p = resolve(arg);
+          const d = parentOf(p);
+          const n = p.slice(p.lastIndexOf("/") + 1);
+          if (denied(p)) return print("strings: " + arg + ": Permission denied");
+          if (FS[p])
+            return print("strings: Warning: '" + arg + "' is a directory");
+          if (FS[d] && FS[d][n] !== undefined) {
+            const t = FS[d][n]
+              .split("\n")
+              .filter((l) => l.length >= 4)
+              .join("\n");
+            if (t) print(t);
+            return;
+          }
+          print("strings: '" + arg + "': No such file");
+        };
+
+        /* ── ltrace ───────────────────────────────────────────── */
+        CMDS.ltrace = (a) => {
+          const args = a.filter((x) => x[0] !== "-");
+          const arg = args[0];
+          if (!arg)
+            return print(
+              "Usage: ltrace [option ...] [command [arg ...]]\nTrace library calls of a given program.",
+            );
+          const b = binOf(arg);
+          if (!b)
+            return print("Can't execute `" + arg + "': No such file or directory");
+          const row = (call, ret) => call.padEnd(46) + " = " + ret;
+          const q = (s) => '"' + s.slice(0, 32) + '"' + (s.length > 32 ? "..." : "");
+          const lines = [];
+          if (b.name === "crackme") {
+            const key = args[1];
+            if (key === undefined) {
+              const msg = "usage: " + arg + " <key>\n";
+              lines.push(
+                row('printf("usage: %s <key>\\n", ' + q(arg) + ")", msg.length),
+                "+++ exited (status 1) +++",
+              );
+            } else {
+              const r = cmpStr(key, CRACK_KEY);
+              lines.push(
+                row("puts(" + q(CRACK_BANNER) + ")", CRACK_BANNER.length + 1),
+                row("strlen(" + q(key) + ")", key.length),
+                row("strcmp(" + q(key) + ", " + q(CRACK_KEY) + ")", r),
+                row(
+                  r === 0 ? 'puts("Access granted.")' : 'puts("Access denied.")',
+                  r === 0 ? 16 : 15,
+                ),
+                "+++ exited (status " + (r === 0 ? 0 : 1) + ") +++",
+              );
+            }
+          } else {
+            const hello = "Hello, AAAA!\n";
+            lines.push(
+              row("setvbuf(0x7f4a5b9f6780, 0, 2, 0)", 0),
+              row('puts("Enter your name: ")', 18),
+              row("gets(0x7ffd9c3a1e30, 0x7f4a5b9f8a80, 0x7f4a5b8b9a37)", "0x7ffd9c3a1e30"),
+              row('printf("Hello, %s!\\n", "AAAA")', hello.length),
+              "+++ exited (status 0) +++",
+            );
+          }
+          print(lines.join("\n"));
+        };
+
+        /* ── ./vuln and ./crackme (only runnable from ~) ──────── */
+        CMDS["./vuln"] = (a) => {
+          if (cwd !== HOME)
+            return print("bash: ./vuln: No such file or directory");
+          const name = a.join(" ") || "anon";
+          const lines = ["Enter your name: " + name.slice(0, 24) + (name.length > 24 ? "..." : "")];
+          if (name.length >= 72) {
+            lines.push("Segmentation fault (core dumped)");
+          } else {
+            lines.push("Hello, " + name + "!");
+          }
+          print(lines.join("\n"));
+        };
+        CMDS["./crackme"] = (a) => {
+          if (cwd !== HOME)
+            return print("bash: ./crackme: No such file or directory");
+          if (!a.length) return print("usage: ./crackme <key>");
+          const ok = a[0] === CRACK_KEY;
+          print(
+            [CRACK_BANNER, ok ? "Access granted." : "Access denied."]
+              .concat(ok ? [CRACK_FLAG] : [])
+              .join("\n"),
+          );
         };
 
         /* ── ssh (drops into a second, remote fake shell) ──────── */
