@@ -1038,6 +1038,7 @@
 
       /* ── 3D orbit upgrade ─────────────────────────────── */
       .orbit {
+        z-index: 1; /* contain tile depth-sorting below the popup + scrim */
         aspect-ratio: 1.12;
         cursor: grab;
         touch-action: pan-y;
@@ -1075,6 +1076,10 @@
           0 0 20px color-mix(in srgb, var(--cc) 55%, transparent);
       }
       .orbit .orb-tile:focus-visible .orb-box { outline: 2px solid var(--gold); outline-offset: 2px; }
+      /* popup + scrim always above the 3D tiles */
+      .stack-area .ap-scrim { z-index: 400; }
+      .stack-area .ap-pop { z-index: 401; }
+      .orbit-stage { isolation: isolate; }
       .orb-core {
         position: absolute;
         left: 50%;
