@@ -1036,6 +1036,42 @@
         }
       }
 
+      /* ── Stack popup ───────────────────────────────────── */
+      .stack-area {
+        position: relative;
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .stack-area.open .ap-scrim {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .stack-area.open .orb-ring,
+      .stack-area.open .orb-in {
+        animation-play-state: paused;
+      }
+      .stack-item {
+        cursor: pointer;
+      }
+      .stk-cat {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: -2px 0 0.8rem;
+      }
+      .stk-cat::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cc);
+      }
+
       /* ── Skills matrix (radar) ───────────────────────── */
       .radar-wrap {
         border: 1px solid var(--border);
@@ -2174,10 +2210,19 @@
             <button type="button" data-sv="grid">Grid</button>
           </div>
         </div>
-        <div class="orbit-stage" id="orbit-stage">
-          <div class="orbit" id="orbit"></div>
+        <div class="stack-area" id="stack-area">
+          <div class="orbit-stage" id="orbit-stage">
+            <div class="orbit" id="orbit"></div>
+          </div>
+          <div id="list-stack" hidden></div>
+          <div class="ap-scrim" id="st-scrim"></div>
+          <div
+            class="ap-pop"
+            id="st-pop"
+            role="dialog"
+            aria-label="Tool details"
+          ></div>
         </div>
-        <div id="list-stack" hidden></div>
         <button class="back" data-go="home">&lt; back to profile</button>
       </section>
 
@@ -3286,6 +3331,129 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         "#a79bd6",
       ];
 
+      const STACK_INFO = {
+        "Python": [
+          "My go-to for scripting and quick tooling: automating recon, parsing tool output, writing exploit scripts and gluing security tools together.",
+          ["Automation", "Scripting", "pwntools", "Requests"],
+        ],
+        "C": [
+          "Where I learn how things really work: memory layout, pointers and the bugs that come with them. It also keeps tools like PrivAudit fast and dependency free.",
+          ["Pointers", "Memory", "Syscalls", "PrivAudit"],
+        ],
+        "C++": [
+          "Systems and application development where I want classes and the standard library on top of low-level control.",
+          ["OOP", "STL", "Systems", "Memory"],
+        ],
+        "SQL": [
+          "Querying and managing databases, and understanding how injection works from the other side. Sharpened by the SQL for Data Science course.",
+          ["SELECT / JOIN", "SQLite", "MySQL", "SQLi"],
+        ],
+        "Visual Studio Code": [
+          "My main editor for Python, C and web projects, with the terminal, Git and extensions all in one window.",
+          ["Extensions", "Terminal", "Debugger", "Git"],
+        ],
+        "Git": [
+          "Version control for everything I build, so I can branch, experiment and roll back without fear.",
+          ["Branches", "Commits", "Diff", "Rebase"],
+        ],
+        "GitHub": [
+          "Where my projects live, like PrivAudit and AD-Audit. Handy for hosting code, tracking issues and sharing tools.",
+          ["Repos", "Pages", "Issues", "Actions"],
+        ],
+        "PowerShell": [
+          "Windows scripting and administration, and the shell I reach for on Active Directory and Windows targets.",
+          ["Cmdlets", "Scripting", "Active Directory", "Admin"],
+        ],
+        "Nano": [
+          "Quick edits in the terminal over SSH or on a lab box, no fuss and no learning curve.",
+          ["Terminal", "SSH", "Config files", "Quick edits"],
+        ],
+        "Vim": [
+          "Still learning it. Modal editing is slow at first, but I'm building the muscle memory for boxes where nothing else is installed.",
+          ["Modes", "Motions", "Macros", "Vimrc"],
+        ],
+        "Nmap": [
+          "The first thing I run on any target: finding live hosts, open ports and service versions, then following up with NSE scripts.",
+          ["Port scan", "NSE", "Service detection", "OS detection"],
+        ],
+        "RustScan": [
+          "A very fast port scanner for when I want open ports in seconds, then hand them to Nmap for the details.",
+          ["Fast scans", "Nmap handoff", "Batch size", "Ulimit"],
+        ],
+        "Burp Suite": [
+          "Intercepting and replaying web traffic to hunt for injection, broken access control and logic bugs. Set up on both Kali and Windows.",
+          ["Proxy", "Repeater", "Intruder", "Decoder"],
+        ],
+        "Impacket": [
+          "A Python toolkit for talking to Windows protocols: psexec, secretsdump and Kerberos attacks. A staple on Active Directory boxes.",
+          ["psexec", "secretsdump", "Kerberos", "SMB"],
+        ],
+        "OpenVPN": [
+          "Connects me to the TryHackMe and HackTheBox labs so I can reach the target networks safely.",
+          ["TryHackMe", "HackTheBox", ".ovpn", "Tunnels"],
+        ],
+        "SSH": [
+          "Secure remote access to lab machines and servers, including key-based logins, port forwarding and file copies.",
+          ["Keys", "Tunnels", "Port forwarding", "scp"],
+        ],
+        "Ghidra": [
+          "My main reverse engineering tool: decompiling binaries, renaming functions and tracing the logic of crackmes and pwn challenges.",
+          ["Decompiler", "Disassembly", "Symbols", "Scripting"],
+        ],
+        "Cutter": [
+          "A friendly GUI for reverse engineering, great for graph view and getting a quick feel for a binary.",
+          ["Graph view", "Disassembly", "Decompiler", "Rizin"],
+        ],
+        "objdump": [
+          "Quick disassembly straight from the terminal, good for checking sections and hunting gadgets without opening a GUI.",
+          ["-d", "-M intel", "Sections", "Gadgets"],
+        ],
+        "readelf": [
+          "Inspecting ELF headers, sections and the dynamic table to understand a binary before I touch it.",
+          ["Headers", "Sections", "GOT / PLT", "Dynamic"],
+        ],
+        "nm": [
+          "Listing the symbols in a binary to spot interesting functions and imports quickly.",
+          ["Symbols", "Functions", "Imports", "Stripped"],
+        ],
+        "strings": [
+          "The cheapest first look at a binary: pulling out readable text, hardcoded keys and hints before deeper analysis.",
+          ["Hardcoded keys", "Banners", "ASCII", "Unicode"],
+        ],
+        "GDB": [
+          "Debugging binaries for pwn and reversing: breakpoints, stepping and inspecting the stack, usually with pwndbg on top.",
+          ["pwndbg", "Breakpoints", "Stack", "Registers"],
+        ],
+        "x64dbg": [
+          "A Windows user-mode debugger for stepping through executables, patching and getting past anti-debugging.",
+          ["Breakpoints", "Patching", "Anti-debug", "Memory map"],
+        ],
+        "Wireshark": [
+          "Capturing and dissecting packets to see exactly what is on the wire, from CTF pcaps to protocol debugging.",
+          ["PCAP", "Filters", "Follow stream", "Protocols"],
+        ],
+        "Splunk": [
+          "A SIEM I've studied for searching and correlating logs, the backbone of SOC triage and threat hunting.",
+          ["SPL", "Dashboards", "Correlation", "Alerts"],
+        ],
+        "Kali Linux": [
+          "My primary security environment, running in a VM with everything for recon, exploitation and post-exploitation ready to go.",
+          ["Pentesting", "Virtual machine", "Toolset", "Rolling release"],
+        ],
+        "Parrot OS": [
+          "A security-focused Debian-based distribution I keep as an alternative environment to Kali.",
+          ["Debian", "Pentesting", "Privacy", "Lightweight"],
+        ],
+        "BlackArch Linux": [
+          "An Arch-based security distribution with a huge repository of pentesting tools.",
+          ["Arch", "Pacman", "Tool repo", "Pentesting"],
+        ],
+        "VMware": [
+          "Virtualization for my labs: Kali and other VMs, snapshots before risky experiments and isolated networks.",
+          ["VMs", "Snapshots", "Networking", "Labs"],
+        ],
+      };
+
 
       const TIMELINE = [
         {
@@ -3573,8 +3741,12 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         const durs = [90, 120, 150, 180];
         const flat = [];
         STACK.forEach((g, c) =>
-          g.items.forEach((it) => flat.push({ ...it, c, cat: g.cat })),
+          g.items.forEach((it) =>
+            flat.push({ ...it, c, cat: g.cat, i: flat.length }),
+          ),
         );
+        const tiles = [];
+        let cur = -1;
         const rings = caps.map(() => []);
         let r = 0;
         flat.forEach((it) => {
@@ -3628,6 +3800,15 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             const a = (i / list.length) * Math.PI * 2 + k * 0.55;
             const tile = mk("div", "orb-tile");
             tile.dataset.c = it.c;
+            tiles[it.i] = tile;
+            tile.addEventListener("click", () =>
+              cur === it.i ? close_() : open_(it.i),
+            );
+            tile.addEventListener("keydown", (e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              cur === it.i ? close_() : open_(it.i, true);
+            });
             tile.tabIndex = 0;
             tile.setAttribute("aria-label", it.name + ": " + it.desc);
             tile.style.cssText =
@@ -3662,8 +3843,125 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           legend.appendChild(lg);
         });
 
+        const area = document.getElementById("stack-area");
+        const pop = document.getElementById("st-pop");
+        const scrim = document.getElementById("st-scrim");
+        const cards = [...grid.querySelectorAll(".stack-item")];
+        const pad = (n) => String(n).padStart(2, "0");
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+
+        function build(i) {
+          const it = flat[i];
+          const info = STACK_INFO[it.name] || [it.desc, []];
+          let k = 0;
+          const stag = (n) => {
+            n.classList.add("ap-in");
+            n.style.setProperty("--i", k++);
+            return n;
+          };
+          pop.textContent = "";
+          pop.style.setProperty("--cc", STACK_COLORS[it.c]);
+
+          const top = stag(mk("div", "ap-pop-top"));
+          top.appendChild(
+            mk("span", "ap-step", "Tool " + pad(i + 1) + " / " + pad(flat.length)),
+          );
+          const close = mk("button", "ap-close", "×");
+          close.type = "button";
+          close.setAttribute("aria-label", "Close");
+          close.addEventListener("click", close_);
+          top.appendChild(close);
+
+          const tools = mk("div", "ap-tools");
+          info[1].forEach((t) => tools.appendChild(mk("span", "ap-tool", t)));
+
+          const nav = stag(mk("div", "ap-nav"));
+          const prev = mk("button", null, "< prev");
+          const next = mk("button", null, "next >");
+          prev.type = next.type = "button";
+          prev.disabled = i === 0;
+          next.disabled = i === flat.length - 1;
+          prev.addEventListener("click", () => open_(i - 1));
+          next.addEventListener("click", () => open_(i + 1));
+          nav.append(prev, next);
+
+          pop.append(
+            top,
+            stag(mk("h3", "ap-q", it.name)),
+            stag(mk("div", "stk-cat", it.cat)),
+            stag(mk("p", "ap-desc", info[0])),
+            stag(mk("div", "ap-tools-label", "Related topics")),
+            stag(tools),
+            nav,
+          );
+          return close;
+        }
+
+        function open_(i, fromKeyboard) {
+          if (i < 0 || i >= flat.length) return;
+          cur = i;
+          pop.classList.remove("open");
+          const closeBtn = build(i);
+
+          const anchor = grid.hidden
+            ? tiles[i].querySelector(".orb-box")
+            : cards[i];
+          const aR = area.getBoundingClientRect();
+          const nR = anchor.getBoundingClientRect();
+          const cx = nR.left + nR.width / 2 - aR.left;
+          const cy = nR.top + nR.height / 2 - aR.top;
+          const W = pop.offsetWidth,
+            H = pop.offsetHeight,
+            m = 12,
+            gap = nR.height / 2 + 12;
+          const left = clamp(cx - W / 2, m, Math.max(m, aR.width - W - m));
+          let topPx = cy + gap;
+          if (topPx + H > aR.height - m) topPx = cy - gap - H;
+          topPx = clamp(topPx, m, Math.max(m, aR.height - H - m));
+          pop.style.left = left + "px";
+          pop.style.top = topPx + "px";
+          pop.style.transformOrigin = cx - left + "px " + (cy - topPx) + "px";
+
+          void pop.offsetWidth;
+          area.classList.add("open");
+          pop.classList.add("open");
+          if (fromKeyboard) closeBtn.focus({ preventScroll: true });
+          pop.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+
+        function close_() {
+          if (cur < 0) return;
+          cur = -1;
+          area.classList.remove("open");
+          pop.classList.remove("open");
+        }
+
+        cards.forEach((cd, i) => {
+          cd.tabIndex = 0;
+          cd.setAttribute("role", "button");
+          cd.addEventListener("click", () => (cur === i ? close_() : open_(i)));
+          cd.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            cur === i ? close_() : open_(i, true);
+          });
+        });
+        scrim.addEventListener("click", close_);
+        window.__stClose = close_;
+        document.addEventListener("keydown", (e) => {
+          if (document.getElementById("view-stack").hidden) return;
+          if (e.key === "Escape") return close_();
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+          const dir = e.key === "ArrowRight" ? 1 : -1;
+          e.preventDefault();
+          if (cur < 0) open_(dir === 1 ? 0 : flat.length - 1);
+          else open_(cur + dir);
+        });
+
         document.querySelectorAll("[data-sv]").forEach((b) =>
           b.addEventListener("click", () => {
+            close_();
             const orb = b.dataset.sv === "orbit";
             stage.hidden = !orb;
             grid.hidden = orb;
@@ -6204,6 +6502,7 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         if (!VIEWS.includes(name)) name = "home";
         if (window.__apClose) window.__apClose();
         if (window.__skClose) window.__skClose();
+        if (window.__stClose) window.__stClose();
         VIEWS.forEach((v) => {
           document.getElementById("view-" + v).hidden = v !== name;
         });
