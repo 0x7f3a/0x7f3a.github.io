@@ -903,6 +903,7 @@
         border: 1px solid rgba(200, 169, 110, 0.14);
         border-radius: 50%;
         animation: orbSpin var(--dur) linear infinite;
+        pointer-events: none;
       }
       .orb-ring.rev {
         animation-direction: reverse;
@@ -915,6 +916,7 @@
         z-index: 1;
         outline: none;
         transition: opacity 0.25s;
+        pointer-events: auto;
       }
       .orb-tile:hover,
       .orb-tile:focus-visible {
