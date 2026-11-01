@@ -1036,6 +1036,81 @@
         }
       }
 
+      /* ── 3D orbit upgrade ─────────────────────────────── */
+      .orbit {
+        aspect-ratio: 1.12;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .orbit.drag { cursor: grabbing; }
+      .orbit .orb-tile { left: 50%; top: 50%; will-change: transform; }
+      .orbit .orb-in { animation: none; }
+      .orb-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        z-index: 3;
+      }
+      .orbit .orb-box {
+        background:
+          linear-gradient(150deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 45%),
+          var(--accent);
+        box-shadow:
+          calc(var(--ex, 0) * 1px) calc(var(--ey, 0) * 1px) 0 #5e4d2a,
+          calc(var(--ex, 0) * 2px) calc(var(--ey, 0) * 2px) 0 #4a3c21,
+          calc(var(--ex, 0) * 3px) calc(var(--ey, 0) * 3px) 0 #382d19,
+          0 12px 20px rgba(0, 0, 0, 0.4);
+      }
+      .orbit .orb-tile:hover .orb-box,
+      .orbit .orb-tile:focus-visible .orb-box {
+        box-shadow:
+          calc(var(--ex, 0) * 1px) calc(var(--ey, 0) * 1px) 0 #5e4d2a,
+          calc(var(--ex, 0) * 2px) calc(var(--ey, 0) * 2px) 0 #4a3c21,
+          calc(var(--ex, 0) * 3px) calc(var(--ey, 0) * 3px) 0 #382d19,
+          0 0 20px color-mix(in srgb, var(--cc) 55%, transparent);
+      }
+      .orbit .orb-tile:focus-visible .orb-box { outline: 2px solid var(--gold); outline-offset: 2px; }
+      .orb-core {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 25%;
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        z-index: 20;
+        pointer-events: none;
+        background: radial-gradient(circle at 34% 28%, rgba(232, 201, 142, 0.34), rgba(48, 48, 86, 0.55) 42%, rgba(12, 12, 24, 0.82) 72%);
+        border: 1px solid rgba(200, 169, 110, 0.28);
+        box-shadow: inset 0 0 28px rgba(200, 169, 110, 0.22), 0 0 46px rgba(200, 169, 110, 0.14);
+      }
+      .orb-core::before,
+      .orb-core::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(200, 169, 110, 0.2);
+      }
+      .orb-core::before { animation: coreMer 16s ease-in-out infinite alternate; }
+      .orb-core::after { transform: scaleY(0.28); }
+      @keyframes coreMer { from { transform: scaleX(0.1); } to { transform: scaleX(1); } }
+      .orbit .orb-center { z-index: 25; transition: opacity 0.25s; }
+      .orb-core { transition: opacity 0.35s; }
+      .orbit[data-mode="wall"] .orb-core { opacity: 0; }
+      .orbit[data-mode="wall"] .orb-center { opacity: 0; }
+      .orbit[data-mode="wall"][data-hot] .orb-center { opacity: 1; }
+      .stack-lg { cursor: pointer; }
+      .stack-lg[aria-pressed="true"] { color: var(--ink); }
+      .stack-lg[aria-pressed="true"]::before { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc) 30%, transparent); }
+      .stack-lg:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+      @media (prefers-reduced-motion: reduce) { .orb-core::before { animation: none; transform: scaleX(0.5); } }
+
       /* ── Stack popup ───────────────────────────────────── */
       .stack-area {
         position: relative;
@@ -2207,7 +2282,8 @@
           <div class="stack-legend" id="stack-legend"></div>
           <div class="stack-toggle" role="group" aria-label="Stack view">
             <button type="button" class="on" data-sv="orbit">Orbit</button>
-            <button type="button" data-sv="grid">Grid</button>
+            <button type="button" data-sv="wall">Grid</button>
+            <button type="button" data-sv="list">List</button>
           </div>
         </div>
         <div class="stack-area" id="stack-area">
@@ -3781,23 +3857,36 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           );
         }
 
+        let mode = 0, T = 0, yaw = 0, yawV = 0, pitch = 0.8, pitchT = 0.8, m = 0;
+        let px = 0, py = 0, pxT = 0, pyT = 0, drag = null, suppress = false;
+        let hot = -1, hover = false, sel = null, hlHover = null, hl = null;
+        const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const view = document.getElementById("view-stack");
+        const area0 = document.getElementById("stack-area");
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("class", "orb-svg");
+        svg.setAttribute("aria-hidden", "true");
+        const ringPaths = radii.map(() => {
+          const p = document.createElementNS(NS, "path");
+          p.setAttribute("fill", "none");
+          p.setAttribute("stroke", "rgba(200,169,110,0.16)");
+          svg.appendChild(p);
+          return p;
+        });
+        const dust = Array.from({ length: 34 }, () => {
+          const c = document.createElementNS(NS, "circle");
+          c.setAttribute("fill", "#c8a96e");
+          svg.appendChild(c);
+          const th = Math.random() * 6.283, ph = Math.acos(2 * Math.random() - 1), rr = 0.5 + Math.random() * 0.4;
+          return { c, x: rr * Math.sin(ph) * Math.cos(th), y: rr * Math.cos(ph) * 0.8, z: rr * Math.sin(ph) * Math.sin(th), r: 0.6 + Math.random() * 1.1 };
+        });
+        orbit.appendChild(svg);
+        orbit.appendChild(mk("div", "orb-core"));
+
+        const P = [];
         rings.forEach((list, k) => {
-          const ring = mk("div", "orb-ring" + (k % 2 ? " rev" : ""));
-          const rad = radii[k];
-          ring.style.cssText =
-            "--dur:" +
-            durs[k] +
-            "s;left:" +
-            (0.5 - rad) * 100 +
-            "%;top:" +
-            (0.5 - rad) * 100 +
-            "%;width:" +
-            rad * 200 +
-            "%;height:" +
-            rad * 200 +
-            "%";
           list.forEach((it, i) => {
-            const a = (i / list.length) * Math.PI * 2 + k * 0.55;
             const tile = mk("div", "orb-tile");
             tile.dataset.c = it.c;
             tiles[it.i] = tile;
@@ -3811,38 +3900,194 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             });
             tile.tabIndex = 0;
             tile.setAttribute("aria-label", it.name + ": " + it.desc);
-            tile.style.cssText =
-              "--cc:" +
-              STACK_COLORS[it.c] +
-              ";left:" +
-              (50 + 50 * Math.cos(a)) +
-              "%;top:" +
-              (50 + 50 * Math.sin(a)) +
-              "%";
+            tile.style.setProperty("--cc", STACK_COLORS[it.c]);
             const inn = mk("div", "orb-in");
             const box = mk("div", "orb-box");
             box.innerHTML = it.icon;
             inn.appendChild(box);
             tile.appendChild(inn);
-            tile.addEventListener("mouseenter", () => inspect(it));
-            tile.addEventListener("focus", () => inspect(it));
-            tile.addEventListener("mouseleave", rest);
-            tile.addEventListener("blur", rest);
-            ring.appendChild(tile);
+            const on = () => { hot = it.i; orbit.dataset.hot = "1"; inspect(it); };
+            const off = () => { if (hot === it.i) { hot = -1; delete orbit.dataset.hot; } rest(); };
+            tile.addEventListener("mouseenter", on);
+            tile.addEventListener("focus", on);
+            tile.addEventListener("mouseleave", off);
+            tile.addEventListener("blur", off);
+            orbit.appendChild(tile);
+            P[it.i] = {
+              tile, inn, it, k,
+              a0: (i / list.length) * Math.PI * 2 + k * 0.55,
+              w: ((Math.PI * 2) / durs[k]) * (k % 2 ? -1 : 1) * 2,
+              x: 0, y: 0, z: 0, pull: 0, init: false,
+            };
           });
-          orbit.appendChild(ring);
         });
+
+        /* wall layout: a cylinder, one sector per category */
+        const catIdx = STACK.map(() => []);
+        flat.forEach((it) => catIdx[it.c].push(it.i));
+        function wallPos(W, ts) {
+          const Rw = W * 0.4, gap = 0.36, rows = 3;
+          const cols = catIdx.map((a) => Math.ceil(a.length / rows));
+          const dth = (Math.PI * 2 - gap * catIdx.length) / cols.reduce((s, n) => s + n, 0);
+          const out = [];
+          let th0 = (-cols[0] * dth) / 2;
+          catIdx.forEach((a, c) => {
+            a.forEach((idx, j) => {
+              const col = Math.floor(j / rows), row = j % rows;
+              const th = th0 + (col + 0.5) * dth;
+              out[idx] = [Rw * Math.sin(th), (row - (Math.min(rows, a.length) - 1) / 2) * ts * 1.7, Rw * Math.cos(th)];
+            });
+            th0 += cols[c] * dth + gap;
+          });
+          return out;
+        }
+
+        let last = performance.now(), vbKey = "";
+        const ease = (dt, r) => 1 - Math.exp(-dt * r);
+        function frame(now) {
+          requestAnimationFrame(frame);
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          const W = orbit.clientWidth, H = orbit.clientHeight;
+          if (!W || view.hidden || stage.hidden || document.hidden) return;
+          if (area0.classList.contains("open")) return;
+          const still = hover || hot >= 0 || rm;
+          if (!still && !drag) T += dt;
+          if (!drag) {
+            yaw += yawV;
+            yawV *= 0.92;
+            if (!still) yaw += (mode ? 0.16 : 0.03) * dt;
+          }
+          px += (pxT - px) * ease(dt, 4);
+          py += (pyT - py) * ease(dt, 4);
+          pitch += (pitchT - pitch) * ease(dt, 5);
+          m += (mode - m) * ease(dt, 4);
+          const psi = yaw + px * 0.16, phi = pitch + py * 0.07;
+          const cY = Math.cos(psi), sY = Math.sin(psi), cP = Math.cos(phi), sP = Math.sin(phi);
+          const D = W * 2.8, half = W * 0.46;
+          const key = W + "x" + H;
+          if (key !== vbKey) {
+            vbKey = key;
+            svg.setAttribute("viewBox", -W / 2 + " " + -H / 2 + " " + W + " " + H);
+          }
+
+          const ts = P[0].tile.offsetWidth || 40;
+          const WT = mode ? wallPos(W, ts) : null;
+          const lr = ease(dt, rm ? 30 : 4.5);
+          for (let i = 0; i < P.length; i++) {
+            const o = P[i];
+            let tx, ty, tz;
+            if (WT) {
+              tx = WT[i][0]; ty = WT[i][1]; tz = WT[i][2];
+            } else {
+              const a = o.a0 + o.w * T, r = radii[o.k] * W, inc = (o.k - 1.5) * 0.09;
+              const X0 = r * Math.cos(a);
+              tx = X0 * Math.cos(inc); ty = X0 * Math.sin(inc); tz = r * Math.sin(a);
+            }
+            if (!o.init) { o.x = tx; o.y = ty; o.z = tz; o.init = true; }
+            else { o.x += (tx - o.x) * lr; o.y += (ty - o.y) * lr; o.z += (tz - o.z) * lr; }
+            const want = i === hot ? 0.22 * W : hl !== null && o.it.c === hl ? 0.1 * W : 0;
+            o.pull += (want - o.pull) * ease(dt, 8);
+            const X = o.x * cY + o.z * sY, Z1 = -o.x * sY + o.z * cY;
+            const Y = o.y * cP - Z1 * sP, Zr = o.y * sP + Z1 * cP + o.pull;
+            const p = D / (D - Zr), zn = Math.max(-1, Math.min(1, Zr / half));
+            const sx = X * p, sy = -Y * p;
+            const st = o.tile.style;
+            st.transform = "translate(" + sx.toFixed(1) + "px," + sy.toFixed(1) + "px) scale(" + p.toFixed(3) + ")";
+            st.zIndex = i === hot ? 200 : zn > 0 ? 30 + Math.round(zn * 20) : 5 + Math.round((zn + 1) * 10);
+            st.setProperty("--ex", ((-sx / (W / 2)) * 2.2).toFixed(2));
+            st.setProperty("--ey", ((-sy / (W / 2)) * 2.2).toFixed(2));
+            o.inn.style.opacity = i === hot ? 1 : (0.42 + 0.58 * (zn + 1) / 2).toFixed(2);
+          }
+
+          ringPaths.forEach((pa, k) => {
+            const r = radii[k] * W, inc = (k - 1.5) * 0.09;
+            let d = "";
+            for (let s = 0; s <= 96; s++) {
+              const a = (s / 96) * 6.2832, X0 = r * Math.cos(a), Z0 = r * Math.sin(a);
+              const x = X0 * Math.cos(inc), y = X0 * Math.sin(inc);
+              const X = x * cY + Z0 * sY, Z1 = -x * sY + Z0 * cY;
+              const Y = y * cP - Z1 * sP, Zr = y * sP + Z1 * cP, p = D / (D - Zr);
+              d += (s ? "L" : "M") + (X * p).toFixed(1) + " " + (-Y * p).toFixed(1);
+            }
+            pa.setAttribute("d", d);
+            pa.setAttribute("opacity", (1 - m).toFixed(2));
+          });
+          dust.forEach((q) => {
+            const x = q.x * W, y = q.y * W, z = q.z * W;
+            const X = x * cY + z * sY, Z1 = -x * sY + z * cY;
+            const Y = y * cP - Z1 * sP, Zr = y * sP + Z1 * cP, p = D / (D - Zr);
+            q.c.setAttribute("cx", (X * p).toFixed(1));
+            q.c.setAttribute("cy", (-Y * p).toFixed(1));
+            q.c.setAttribute("r", (q.r * p).toFixed(2));
+            q.c.setAttribute("opacity", (0.08 + 0.3 * (Math.max(-1, Math.min(1, Zr / half)) + 1) / 2).toFixed(2));
+          });
+        }
+
+        /* drag to spin, parallax, hover state */
+        stage.addEventListener("pointerdown", (e) => {
+          if (e.button) return;
+          drag = { x: e.clientX, y: e.clientY, moved: 0 };
+          orbit.classList.add("drag");
+        });
+        window.addEventListener("pointermove", (e) => {
+          if (drag) {
+            const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+            drag.x = e.clientX; drag.y = e.clientY;
+            drag.moved += Math.abs(dx) + Math.abs(dy);
+            yawV = dx * 0.006; yaw += yawV;
+            pitchT = Math.max(0.12, Math.min(1.25, pitchT + dy * 0.004));
+          }
+          const r = stage.getBoundingClientRect();
+          const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+          pxT = inside ? ((e.clientX - r.left) / r.width) * 2 - 1 : 0;
+          pyT = inside ? ((e.clientY - r.top) / r.height) * 2 - 1 : 0;
+        });
+        const endDrag = () => {
+          if (!drag) return;
+          suppress = drag.moved > 6;
+          drag = null;
+          orbit.classList.remove("drag");
+          setTimeout(() => (suppress = false), 0);
+        };
+        window.addEventListener("pointerup", endDrag);
+        window.addEventListener("pointercancel", endDrag);
+        stage.addEventListener("click", (e) => {
+          if (suppress) { e.stopPropagation(); e.preventDefault(); suppress = false; }
+        }, true);
+        stage.addEventListener("mouseenter", () => (hover = true));
+        stage.addEventListener("mouseleave", () => { hover = false; pxT = pyT = 0; });
         rest();
         orbit.appendChild(center);
 
+        const setHl = () => {
+          hl = hlHover !== null ? hlHover : sel;
+          if (hl === null) delete orbit.dataset.hl;
+          else orbit.dataset.hl = hl;
+        };
         STACK.forEach((g, c) => {
           const lg = mk("span", "stack-lg", g.cat);
           lg.style.setProperty("--cc", STACK_COLORS[c]);
-          lg.addEventListener("mouseenter", () => (orbit.dataset.hl = c));
-          lg.addEventListener("mouseleave", () => delete orbit.dataset.hl);
+          lg.tabIndex = 0;
+          lg.setAttribute("role", "button");
+          lg.setAttribute("aria-pressed", "false");
+          const pin = () => {
+            sel = sel === c ? null : c;
+            legend.querySelectorAll(".stack-lg").forEach((x, j) =>
+              x.setAttribute("aria-pressed", String(sel === j)),
+            );
+            setHl();
+          };
+          lg.addEventListener("mouseenter", () => { hlHover = c; setHl(); });
+          lg.addEventListener("mouseleave", () => { hlHover = null; setHl(); });
+          lg.addEventListener("click", pin);
+          lg.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            pin();
+          });
           legend.appendChild(lg);
         });
-
         const area = document.getElementById("stack-area");
         const pop = document.getElementById("st-pop");
         const scrim = document.getElementById("st-scrim");
@@ -3962,14 +4207,18 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         document.querySelectorAll("[data-sv]").forEach((b) =>
           b.addEventListener("click", () => {
             close_();
-            const orb = b.dataset.sv === "orbit";
-            stage.hidden = !orb;
-            grid.hidden = orb;
+            const sv = b.dataset.sv;
+            stage.hidden = sv === "list";
+            grid.hidden = sv !== "list";
+            mode = sv === "wall" ? 1 : 0;
+            pitchT = mode ? 0.3 : 0.8;
+            orbit.dataset.mode = mode ? "wall" : "orbit";
             document
               .querySelectorAll("[data-sv]")
               .forEach((x) => x.classList.toggle("on", x === b));
           }),
         );
+        requestAnimationFrame(frame);
       }
       renderOrbit();
 
