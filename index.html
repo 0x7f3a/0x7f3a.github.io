@@ -897,6 +897,7 @@
         width: min(100%, 720px);
         aspect-ratio: 1;
         margin: 0 auto;
+        isolation: isolate; /* keep tile depth z-indexes inside the orbit, below the popup */
       }
       /* 3D depth: soft glow, projected ring arcs, billboarded tiles */
       .orbit::before {
@@ -1057,6 +1058,11 @@
       .stack-area.open .ap-scrim {
         opacity: 1;
         pointer-events: auto;
+      }
+      .stack-area .ap-scrim {
+        background: rgba(8, 8, 18, 0.9);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
       }
       .stack-item {
         cursor: pointer;
@@ -6754,3 +6760,4 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
     </script>
   </body>
 </html>
+  
