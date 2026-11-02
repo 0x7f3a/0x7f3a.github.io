@@ -898,43 +898,62 @@
         aspect-ratio: 1;
         margin: 0 auto;
       }
-      .orb-ring {
+      /* 3D depth: soft glow, projected ring arcs, billboarded tiles */
+      .orbit::before {
+        content: "";
         position: absolute;
-        border: 1px solid rgba(200, 169, 110, 0.14);
+        inset: 6%;
         border-radius: 50%;
-        animation: orbSpin var(--dur) linear infinite;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(200, 169, 110, 0.09),
+          rgba(200, 169, 110, 0.025) 45%,
+          transparent 70%
+        );
         pointer-events: none;
       }
-      .orb-ring.rev {
-        animation-direction: reverse;
+      .orb-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .orb-arc {
+        fill: none;
+        stroke: #c8a96e;
+        stroke-width: 1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+      .orb-arc.back {
+        stroke-opacity: 0.08;
+      }
+      .orb-arc.front {
+        stroke-opacity: 0.26;
       }
       .orb-tile {
         position: absolute;
+        left: 50%;
+        top: 50%;
         width: var(--t);
         height: var(--t);
         margin: calc(var(--t) / -2) 0 0 calc(var(--t) / -2);
         z-index: 1;
         outline: none;
-        transition: opacity 0.25s;
         pointer-events: auto;
+        will-change: transform, opacity;
       }
       .orb-tile:hover,
       .orb-tile:focus-visible {
-        z-index: 3;
+        z-index: 60 !important;
       }
       .orb-in {
         width: 100%;
         height: 100%;
-        animation: orbCtr var(--dur) linear infinite;
-      }
-      .orb-ring.rev .orb-in {
-        animation-direction: reverse;
-      }
-      .orbit:hover .orb-ring,
-      .orbit:hover .orb-in,
-      .orbit:focus-within .orb-ring,
-      .orbit:focus-within .orb-in {
-        animation-play-state: paused;
       }
       .orb-box {
         width: 100%;
@@ -942,15 +961,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--accent);
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.06), transparent 55%),
+          var(--accent);
         border: 1px solid color-mix(in srgb, var(--cc) 55%, transparent);
         border-radius: var(--radius);
         color: var(--gold);
         cursor: pointer;
+        box-shadow:
+          0 8px 18px rgba(0, 0, 0, 0.32),
+          inset 0 1px 0 rgba(255, 255, 255, 0.07);
         transition:
           transform 0.2s,
           border-color 0.2s,
-          box-shadow 0.2s;
+          box-shadow 0.2s,
+          opacity 0.25s;
       }
       .orb-box svg,
       .orb-box img {
@@ -962,13 +987,15 @@
       .orb-tile:focus-visible .orb-box {
         transform: scale(1.18);
         border-color: var(--cc);
-        box-shadow: 0 0 14px color-mix(in srgb, var(--cc) 45%, transparent);
+        box-shadow:
+          0 12px 24px rgba(0, 0, 0, 0.4),
+          0 0 14px color-mix(in srgb, var(--cc) 45%, transparent);
       }
-      .orbit[data-hl="0"] .orb-tile:not([data-c="0"]),
-      .orbit[data-hl="1"] .orb-tile:not([data-c="1"]),
-      .orbit[data-hl="2"] .orb-tile:not([data-c="2"]),
-      .orbit[data-hl="3"] .orb-tile:not([data-c="3"]),
-      .orbit[data-hl="4"] .orb-tile:not([data-c="4"]) {
+      .orbit[data-hl="0"] .orb-tile:not([data-c="0"]) .orb-box,
+      .orbit[data-hl="1"] .orb-tile:not([data-c="1"]) .orb-box,
+      .orbit[data-hl="2"] .orb-tile:not([data-c="2"]) .orb-box,
+      .orbit[data-hl="3"] .orb-tile:not([data-c="3"]) .orb-box,
+      .orbit[data-hl="4"] .orb-tile:not([data-c="4"]) .orb-box {
         opacity: 0.18;
       }
       .orb-center {
@@ -979,6 +1006,7 @@
         transform: translate(-50%, -50%);
         text-align: center;
         pointer-events: none;
+        z-index: 20;
         color: #d8d8e0;
       }
       .orb-count {
@@ -1019,22 +1047,6 @@
         color: #9a9aac;
         margin-top: 6px;
       }
-      @keyframes orbSpin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes orbCtr {
-        to {
-          transform: rotate(-360deg);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .orb-ring,
-        .orb-in {
-          animation: none;
-        }
-      }
 
       /* ── Stack popup ───────────────────────────────────── */
       .stack-area {
@@ -1045,10 +1057,6 @@
       .stack-area.open .ap-scrim {
         opacity: 1;
         pointer-events: auto;
-      }
-      .stack-area.open .orb-ring,
-      .stack-area.open .orb-in {
-        animation-play-state: paused;
       }
       .stack-item {
         cursor: pointer;
@@ -3781,23 +3789,28 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
           );
         }
 
-        rings.forEach((list, k) => {
-          const ring = mk("div", "orb-ring" + (k % 2 ? " rev" : ""));
-          const rad = radii[k];
-          ring.style.cssText =
-            "--dur:" +
-            durs[k] +
-            "s;left:" +
-            (0.5 - rad) * 100 +
-            "%;top:" +
-            (0.5 - rad) * 100 +
-            "%;width:" +
-            rad * 200 +
-            "%;height:" +
-            rad * 200 +
-            "%";
-          list.forEach((it, i) => {
-            const a = (i / list.length) * Math.PI * 2 + k * 0.55;
+        /* ── 3D engine: tilted orbital planes, perspective, depth cues ── */
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("class", "orb-svg");
+        svg.setAttribute("viewBox", "0 0 1000 1000");
+        svg.setAttribute("aria-hidden", "true");
+        orbit.appendChild(svg);
+
+        const BASE_TILT = 0.82; // how far the orbital plane leans back (rad)
+        const INCL = [0, 0.07, -0.05, 0.04]; // per-ring inclination offsets
+        const ROLL = [-0.1, 0.08, -0.06, 0.1]; // per-ring in-plane twist
+        const PERSP = 2.6; // camera distance (in orbit widths)
+        const SEG = 120;
+
+        const sys = rings.map((list, k) => {
+          const back = document.createElementNS(NS, "path");
+          back.setAttribute("class", "orb-arc back");
+          const front = document.createElementNS(NS, "path");
+          front.setAttribute("class", "orb-arc front");
+          svg.append(back, front);
+
+          const items = list.map((it, i) => {
             const tile = mk("div", "orb-tile");
             tile.dataset.c = it.c;
             tiles[it.i] = tile;
@@ -3811,14 +3824,7 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             });
             tile.tabIndex = 0;
             tile.setAttribute("aria-label", it.name + ": " + it.desc);
-            tile.style.cssText =
-              "--cc:" +
-              STACK_COLORS[it.c] +
-              ";left:" +
-              (50 + 50 * Math.cos(a)) +
-              "%;top:" +
-              (50 + 50 * Math.sin(a)) +
-              "%";
+            tile.style.cssText = "--cc:" + STACK_COLORS[it.c];
             const inn = mk("div", "orb-in");
             const box = mk("div", "orb-box");
             box.innerHTML = it.icon;
@@ -3828,10 +3834,138 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
             tile.addEventListener("focus", () => inspect(it));
             tile.addEventListener("mouseleave", rest);
             tile.addEventListener("blur", rest);
-            ring.appendChild(tile);
+            orbit.appendChild(tile);
+            return { tile, a0: (i / list.length) * Math.PI * 2 + k * 0.55 };
           });
-          orbit.appendChild(ring);
+
+          return {
+            k,
+            rad: radii[k],
+            dir: k % 2 ? -1 : 1,
+            w: (Math.PI * 2) / durs[k],
+            items,
+            back,
+            front,
+          };
         });
+
+        // point on ring k at angle a, then global (mouse) rotation, then perspective
+        function proj(k, rad, a, gx, gy) {
+          const phi = BASE_TILT + INCL[k];
+          const cp = Math.cos(phi),
+            sp = Math.sin(phi),
+            cr = Math.cos(ROLL[k]),
+            sr = Math.sin(ROLL[k]);
+          const x0 = rad * Math.cos(a),
+            y0 = rad * Math.sin(a);
+          const y1 = y0 * cp,
+            z1 = y0 * sp;
+          const x2 = x0 * cr - y1 * sr,
+            y2 = x0 * sr + y1 * cr;
+          const cy = Math.cos(gy),
+            sy = Math.sin(gy),
+            cx = Math.cos(gx),
+            sx = Math.sin(gx);
+          const x3 = x2 * cy + z1 * sy,
+            z3 = -x2 * sy + z1 * cy;
+          const y4 = y2 * cx - z3 * sx,
+            z4 = y2 * sx + z3 * cx;
+          const s = PERSP / (PERSP - z4);
+          return [x3 * s, y4 * s, z4, s];
+        }
+
+        const f1 = (n) => (500 + n * 1000).toFixed(1);
+        function draw(T, gx, gy) {
+          const W = orbit.clientWidth;
+          if (!W) return;
+          sys.forEach((r) => {
+            r.items.forEach((o) => {
+              const p = proj(r.k, r.rad, o.a0 + r.dir * r.w * T, gx, gy);
+              const zn = Math.max(-1, Math.min(1, p[2] / 0.33));
+              const st = o.tile.style;
+              st.transform =
+                "translate3d(" +
+                (p[0] * W).toFixed(2) +
+                "px," +
+                (p[1] * W).toFixed(2) +
+                "px,0) scale(" +
+                p[3].toFixed(3) +
+                ")";
+              st.opacity = (0.58 + 0.21 * (zn + 1)).toFixed(3);
+              st.zIndex = Math.round(20 + zn * 18);
+            });
+
+            const pts = [];
+            for (let i = 0; i <= SEG; i++)
+              pts.push(proj(r.k, r.rad, (i / SEG) * Math.PI * 2, gx, gy));
+            const d = { b: "", f: "" };
+            let prev = "";
+            for (let i = 0; i < SEG; i++) {
+              const p = pts[i],
+                q = pts[i + 1];
+              const key = p[2] + q[2] >= 0 ? "f" : "b";
+              if (key !== prev) d[key] += "M" + f1(p[0]) + " " + f1(p[1]);
+              d[key] += "L" + f1(q[0]) + " " + f1(q[1]);
+              prev = key;
+            }
+            r.back.setAttribute("d", d.b);
+            r.front.setAttribute("d", d.f);
+          });
+        }
+
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        const stackView = document.getElementById("view-stack");
+        const stackArea = document.getElementById("stack-area");
+        let T = 0,
+          speed = 1,
+          gx = 0,
+          gy = 0,
+          tgx = 0,
+          tgy = 0,
+          last = 0;
+
+        draw(0, 0, 0);
+        if (window.ResizeObserver)
+          new ResizeObserver(() => draw(T, gx, gy)).observe(orbit);
+
+        if (!reduceMotion) {
+          // gentle parallax: the whole system leans toward the cursor
+          stage.addEventListener("pointermove", (e) => {
+            const b = stage.getBoundingClientRect();
+            const nx = ((e.clientX - b.left) / b.width - 0.5) * 2;
+            const ny = ((e.clientY - b.top) / b.height - 0.5) * 2;
+            tgy = nx * 0.22;
+            tgx = -ny * 0.16;
+          });
+          stage.addEventListener("pointerleave", () => {
+            tgx = tgy = 0;
+          });
+
+          const frame = (now) => {
+            requestAnimationFrame(frame);
+            const dt = Math.min(0.05, (now - last) / 1000 || 0);
+            last = now;
+            if (stackView.hidden || stage.hidden || document.hidden) return;
+            if (stackArea.classList.contains("open")) return; // popup anchored: hold still
+            const paused =
+              orbit.matches(":hover") || orbit.matches(":focus-within");
+            speed += ((paused ? 0 : 1) - speed) * (1 - Math.exp(-dt * 4));
+            T += dt * speed;
+            const k = 1 - Math.exp(-dt * 5);
+            gx += (tgx - gx) * k;
+            gy += (tgy - gy) * k;
+            const t = now / 1000;
+            draw(
+              T,
+              gx + 0.03 * Math.sin(t * 0.4),
+              gy + 0.045 * Math.sin(t * 0.27 + 1),
+            );
+          };
+          requestAnimationFrame(frame);
+        }
+
         rest();
         orbit.appendChild(center);
 
