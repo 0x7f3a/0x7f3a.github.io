@@ -1213,6 +1213,55 @@
         }
       }
 
+      /* ── PenguinOS desktop (Terminal view) ───────────── */
+      .os{position:relative;height:min(560px,72vh);overflow:hidden;border-radius:var(--radius);border-top:2px solid rgba(200,169,110,.6);background:#08080e;color:#d8d8e0;font-family:"JetBrains Mono",monospace;font-size:12px;user-select:none}
+      .os.full{position:fixed;inset:0;height:auto;z-index:100;border-radius:0;border-top:0}
+      .os button{font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer}
+      .os-wall{position:absolute;inset:0;background:radial-gradient(ellipse at 66% 48%,#1a1a2c 0,#0b0b13 55%,#060609 100%)}
+      .os-wall::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);background-size:48px 48px}
+      .os-logo{position:absolute;right:11%;top:52%;width:min(290px,32%);transform:translateY(-50%);color:var(--gold);filter:drop-shadow(0 0 30px rgba(200,169,110,.2))}
+      .os-brand{position:absolute;left:24px;bottom:20px;line-height:1.35}
+      .os-brand b{display:block;font-family:"Instrument Serif",serif;font-weight:400;font-size:2.2rem;color:#eceaf4}
+      .os-brand span{color:#6f6f84;font-size:11px;letter-spacing:.04em}
+      .os-bar{position:absolute;top:0;left:0;right:0;height:30px;display:flex;align-items:center;gap:6px;padding:0 8px;background:rgba(8,8,14,.84);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.07);z-index:5000}
+      .os-start{color:var(--gold)!important;padding:3px 9px}
+      .os-start:hover,.os-fs:hover{background:rgba(200,169,110,.14)!important}
+      .os-tasks{flex:1;min-width:0;display:flex;gap:4px;overflow:hidden}
+      .os-task{max-width:120px;padding:2px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9a9aac!important;border-color:rgba(255,255,255,.08)!important}
+      .os-task.on{color:#eceaf4!important;background:rgba(200,169,110,.16)!important;border-color:rgba(200,169,110,.45)!important}
+      .os-clock{color:#9a9aac;white-space:nowrap;padding:0 4px}
+      .os-fs{padding:2px 8px}
+      .os-menu{position:absolute;top:32px;left:6px;min-width:190px;padding:5px;background:#12121d;border:1px solid rgba(255,255,255,.1);border-radius:4px;box-shadow:0 14px 36px rgba(0,0,0,.55);z-index:5001}
+      .os-menu button,.os-menu a{display:block;width:100%;text-align:left;padding:7px 10px;color:#d8d8e0;text-decoration:none;border-radius:3px;cursor:pointer}
+      .os-menu button:hover,.os-menu a:hover{background:rgba(200,169,110,.16);color:var(--gold)}
+      .os-menu hr{border:0;border-top:1px solid rgba(255,255,255,.08);margin:4px 0}
+      .os-icons{position:absolute;left:12px;top:42px;bottom:12px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:12px}
+      .os-ico{width:68px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px;color:#d8d8e0;text-decoration:none;font-size:10.5px;border-radius:3px;cursor:pointer;background:none;border:1px solid transparent}
+      .os-ico:hover,.os-ico:focus-visible{background:rgba(255,255,255,.06);border-color:rgba(200,169,110,.3);outline:none}
+      .os-g{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--accent);border:1px solid rgba(200,169,110,.5);border-radius:2px;color:var(--gold);font-size:15px;box-shadow:0 6px 14px rgba(0,0,0,.35)}
+      .os-wins{position:absolute;inset:30px 0 0 0;z-index:1}
+      .os-hold{display:none}
+      .os-win{position:absolute;display:flex;flex-direction:column;min-width:240px;min-height:140px;background:var(--accent);border:1px solid rgba(255,255,255,.12);border-radius:4px;box-shadow:0 18px 50px rgba(0,0,0,.55);resize:both;overflow:hidden}
+      .os-win[hidden]{display:none}
+      .os-win.focus{border-color:rgba(200,169,110,.5)}
+      .os-win.max{inset:0!important;width:auto!important;height:auto!important;resize:none;border-radius:0}
+      .os-tb{display:flex;align-items:center;gap:6px;height:28px;padding:0 6px 0 10px;flex-shrink:0;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07);cursor:grab;touch-action:none}
+      .os-tt{flex:1;color:#9a9aac;font-size:11px;letter-spacing:.04em}
+      .os-win.focus .os-tt{color:var(--gold)}
+      .os-tb button{width:20px;height:20px;padding:0;line-height:1;color:#9a9aac}
+      .os-tb button:hover{background:rgba(255,255,255,.1);color:#eceaf4}
+      .os-body{flex:1;min-height:0;overflow:auto;user-select:text}
+      .os-body .sh{height:100%;border:0;border-radius:0}
+      .os-files,.os-set{padding:12px 14px;font-size:12px}
+      .os-path{color:#6f6f84;font-size:11px;margin:4px 0 8px}
+      .os-file{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;text-align:left}
+      .os-file:hover,.os-file:focus-visible{background:rgba(200,169,110,.12)!important;outline:none}
+      .os-file span:first-child{color:var(--gold)}
+      .os-file em{margin-left:auto;font-style:normal;color:#6f6f84}
+      .os-set p{color:#9a9aac;line-height:1.8}
+      .os-set .os-btn{margin-top:12px;padding:6px 12px;color:var(--gold);border:1px solid rgba(200,169,110,.45)}
+      .os-set .os-btn:hover{background:rgba(200,169,110,.14)}
+
       /* ── Boot screen ─────────────────────────────────── */
       .boot {
         position: fixed;
@@ -2291,8 +2340,43 @@
       <section class="view" id="view-terminal" hidden>
         <h2 class="view-title">Terminal</h2>
         <p class="view-sub">
-          A fake shell running PenguinOS. Type help to get started.
-        </p>
+          PenguinOS desktop. Double-click an icon, or open Terminal and type help        <div class="os" id="os">
+          <div class="os-wall">
+            <svg class="os-logo" viewBox="0 0 200 250" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M100 18c-30 0-48 26-48 62 0 18-12 30-22 56-8 20-2 38 20 46 14 5 32 8 50 8s36-3 50-8c22-8 28-26 20-46-10-26-22-38-22-56 0-36-18-62-48-62z"/>
+              <path d="M100 100c-24 0-38 22-38 52s14 50 38 50 38-20 38-50-14-52-38-52z" fill="currentColor" fill-opacity=".1"/>
+              <path d="M54 112c-16 18-22 40-16 62M146 112c16 18 22 40 16 62"/>
+              <path d="M100 128l12 14-12 14-12-14z" fill="currentColor" fill-opacity=".85"/>
+              <circle cx="86" cy="62" r="4.5" fill="currentColor"/><circle cx="114" cy="62" r="4.5" fill="currentColor"/>
+              <path d="M91 78l9 12 9-12z" fill="currentColor"/>
+              <ellipse cx="78" cy="233" rx="17" ry="6"/><ellipse cx="122" cy="233" rx="17" ry="6"/>
+            </svg>
+            <div class="os-brand"><b>PenguinOS</b><span>the quieter you become, the more you are able to hear</span></div>
+          </div>
+          <div class="os-bar">
+            <button type="button" class="os-start" id="osStart">&#9670; PenguinOS</button>
+            <div class="os-tasks" id="osTasks"></div>
+            <span class="os-clock" id="osClock"></span>
+            <button type="button" class="os-fs" id="osFs" title="Toggle fullscreen" aria-label="Toggle fullscreen">&#9974;</button>
+          </div>
+          <div class="os-menu" id="osMenu" hidden>
+            <button type="button" data-app="term">Terminal</button>
+            <button type="button" data-app="files">Files</button>
+            <button type="button" data-app="settings">Settings</button>
+            <a href="https://ctf-0x7f3a.github.io" target="_blank" rel="noopener noreferrer">Open CTF &rarr;</a>
+            <hr />
+            <button type="button" data-act="full">Toggle fullscreen</button>
+            <button type="button" data-act="exit">Log out</button>
+          </div>
+          <div class="os-icons">
+            <button type="button" class="os-ico" data-app="term"><span class="os-g">&gt;_</span>Terminal</button>
+            <button type="button" class="os-ico" data-app="files"><span class="os-g">&#9638;</span>Files</button>
+            <button type="button" class="os-ico" data-app="settings"><span class="os-g">&#9881;</span>Settings</button>
+            <a class="os-ico" href="https://ctf-0x7f3a.github.io" target="_blank" rel="noopener noreferrer"><span class="os-g">&#9873;</span>CTF</a>
+            <button type="button" class="os-ico" data-act="exit"><span class="os-g">&#9211;</span>Log out</button>
+          </div>
+          <div class="os-wins" id="osWins"></div>
+          <div class="os-hold">
         <div class="sh" id="shBox">
           <div id="shOut"></div>
           <div class="sh-row">
@@ -2308,6 +2392,9 @@
               spellcheck="false"
             />
           </div>
+        </div>
+          </div>
+        </div>
         </div>
         <p class="sh-link">
           Ready for a challenge?
@@ -6603,6 +6690,204 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
         window.addEventListener("resize", closePop);
         window.__apClose = closePop;
       })();
+      (function desktop() {
+        const os = document.getElementById("os");
+        if (!os) return;
+        const area = document.getElementById("osWins");
+        const tasks = document.getElementById("osTasks");
+        const menu = document.getElementById("osMenu");
+        const baseFocus = window.__shFocus;
+        const wins = {};
+        let zTop = 10;
+        const el = (t, c, x) => {
+          const n = document.createElement(t);
+          if (c) n.className = c;
+          if (x != null) n.textContent = x;
+          return n;
+        };
+
+        function filesBody() {
+          const b = el("div", "os-files");
+          b.appendChild(el("div", "os-path", "/home/0x7f3a/"));
+          [
+            ["projects", "Projects"],
+            ["writeups", "Writeups"],
+            ["achievements", "Achievements"],
+            ["stack", "My Stack"],
+            ["skills", "Skills Matrix"],
+            ["timeline", "Timeline"],
+            ["attackpath", "Attack Path"],
+          ].forEach(([h, n]) => {
+            const r = el("button", "os-file");
+            r.type = "button";
+            r.append(el("span", null, "\u25B8"), el("span", null, h + "/"), el("em", null, n));
+            const go = () => (location.hash = h);
+            r.addEventListener("dblclick", go);
+            r.addEventListener("keydown", (e) => e.key === "Enter" && go());
+            r.addEventListener("click", (e) => e.pointerType === "touch" && go());
+            b.appendChild(r);
+          });
+          b.appendChild(el("div", "os-path", "double-click a folder to open it"));
+          return b;
+        }
+
+        function settingsBody() {
+          const b = el("div", "os-set");
+          b.append(
+            el("p", null, "PenguinOS 1.0 (Arctic)"),
+            el("p", null, "kernel: 0x7f3a-arctic"),
+            el("p", null, "session: operator@antarctic-station"),
+          );
+          const t = el("button", "os-btn", "Toggle light / dark");
+          t.type = "button";
+          t.addEventListener("click", () => document.getElementById("themeBtn").click());
+          b.appendChild(t);
+          return b;
+        }
+
+        const APPS = {
+          term: { title: "Terminal", w: 580, h: 340, x: 96, y: 14, body: () => document.getElementById("shBox") },
+          files: { title: "Files", w: 400, h: 300, x: 170, y: 50, body: filesBody },
+          settings: { title: "Settings", w: 320, h: 230, x: 240, y: 84, body: settingsBody },
+        };
+
+        function focusWin(id) {
+          Object.keys(wins).forEach((k) => {
+            const on = k === id;
+            wins[k].win.classList.toggle("focus", on);
+            if (wins[k].task) wins[k].task.classList.toggle("on", on && !wins[k].win.hidden);
+          });
+          wins[id].win.style.zIndex = ++zTop;
+          if (id === "term" && baseFocus) baseFocus();
+        }
+
+        function closeWin(id) {
+          const w = wins[id];
+          w.win.hidden = true;
+          if (w.task) w.task.remove();
+          w.task = null;
+        }
+
+        function openApp(id) {
+          let w = wins[id];
+          if (!w) {
+            const a = APPS[id];
+            const win = el("div", "os-win");
+            const W = Math.min(a.w, area.clientWidth - 16);
+            const H = Math.min(a.h, area.clientHeight - 16);
+            win.style.width = W + "px";
+            win.style.height = H + "px";
+            win.style.left = Math.max(8, Math.min(a.x, area.clientWidth - W - 8)) + "px";
+            win.style.top = Math.max(8, Math.min(a.y, area.clientHeight - H - 8)) + "px";
+            const tb = el("div", "os-tb");
+            const btn = (t, label, fn) => {
+              const x = el("button", null, t);
+              x.type = "button";
+              x.setAttribute("aria-label", label);
+              x.addEventListener("click", fn);
+              return x;
+            };
+            tb.append(
+              el("span", "os-tt", a.title),
+              btn("\u2013", "Minimize", () => { win.hidden = true; if (wins[id].task) wins[id].task.classList.remove("on"); }),
+              btn("\u25A1", "Maximize", () => win.classList.toggle("max")),
+              btn("\u00D7", "Close", () => closeWin(id)),
+            );
+            const body = el("div", "os-body");
+            body.appendChild(a.body());
+            win.append(tb, body);
+            area.appendChild(win);
+            win.addEventListener("pointerdown", () => focusWin(id), true);
+            tb.addEventListener("dblclick", (e) => { if (!e.target.closest("button")) win.classList.toggle("max"); });
+            tb.addEventListener("pointerdown", (e) => {
+              if (e.target.closest("button") || win.classList.contains("max")) return;
+              const r = win.getBoundingClientRect();
+              const ar = area.getBoundingClientRect();
+              const dx = e.clientX - r.left;
+              const dy = e.clientY - r.top;
+              tb.setPointerCapture(e.pointerId);
+              const mv = (ev) => {
+                win.style.left = Math.max(60 - r.width, Math.min(ev.clientX - ar.left - dx, ar.width - 60)) + "px";
+                win.style.top = Math.max(0, Math.min(ev.clientY - ar.top - dy, ar.height - 30)) + "px";
+              };
+              const up = () => {
+                tb.removeEventListener("pointermove", mv);
+                tb.removeEventListener("pointerup", up);
+              };
+              tb.addEventListener("pointermove", mv);
+              tb.addEventListener("pointerup", up);
+            });
+            w = wins[id] = { win, task: null };
+          }
+          w.win.hidden = false;
+          if (!w.task) {
+            w.task = el("button", "os-task", APPS[id].title);
+            w.task.type = "button";
+            w.task.addEventListener("click", () => {
+              if (w.win.hidden || !w.win.classList.contains("focus")) {
+                w.win.hidden = false;
+                focusWin(id);
+              } else {
+                w.win.hidden = true;
+                w.task.classList.remove("on");
+              }
+            });
+            tasks.appendChild(w.task);
+          }
+          focusWin(id);
+        }
+
+        function act(name) {
+          if (name === "full") os.classList.toggle("full");
+          if (name === "exit") location.hash = "home";
+        }
+
+        os.querySelectorAll("[data-app]").forEach((n) => {
+          const isMenu = menu.contains(n);
+          n.addEventListener(isMenu ? "click" : "dblclick", () => openApp(n.dataset.app));
+          if (!isMenu) {
+            n.addEventListener("click", (e) => e.pointerType === "touch" && openApp(n.dataset.app));
+            n.addEventListener("keydown", (e) => e.key === "Enter" && openApp(n.dataset.app));
+          }
+        });
+        os.querySelectorAll("[data-act]").forEach((n) => {
+          const isMenu = menu.contains(n);
+          n.addEventListener(isMenu ? "click" : "dblclick", () => act(n.dataset.act));
+          if (!isMenu) {
+            n.addEventListener("click", (e) => e.pointerType === "touch" && act(n.dataset.act));
+            n.addEventListener("keydown", (e) => e.key === "Enter" && act(n.dataset.act));
+          }
+        });
+        document.getElementById("osFs").addEventListener("click", () => act("full"));
+        document.getElementById("osStart").addEventListener("click", (e) => {
+          e.stopPropagation();
+          menu.hidden = !menu.hidden;
+        });
+        document.addEventListener("click", (e) => {
+          if (!menu.contains(e.target)) menu.hidden = true;
+        });
+        menu.addEventListener("click", () => (menu.hidden = true));
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && os.classList.contains("full")) os.classList.remove("full");
+        });
+        window.addEventListener("hashchange", () => {
+          if (location.hash !== "#terminal") os.classList.remove("full");
+        });
+
+        const clock = document.getElementById("osClock");
+        const tick = () => {
+          const d = new Date();
+          clock.textContent =
+            d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }) +
+            "  " +
+            d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        };
+        tick();
+        setInterval(tick, 20000);
+
+        // entering the Terminal view boots straight into a terminal window
+        window.__shFocus = () => openApp("term");
+      })();
       (function themeToggle() {
         const root = document.documentElement;
         const btn = document.getElementById("themeBtn");
@@ -6760,4 +7045,3 @@ powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
     </script>
   </body>
 </html>
-  
