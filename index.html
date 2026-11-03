@@ -3158,7 +3158,7 @@ while true; do
 done
 EOF
 chmod +x /tmp/defend.sh
-/tmp/defend.sh
+/tmp/defend.sh &
 
 Windows Version
 @'
@@ -3184,7 +3184,17 @@ while ($true) {
 }
 '@ | Out-File -FilePath C:\defend.ps1 -Encoding ascii
 
-powershell -ExecutionPolicy Bypass -File C:\defend.ps1`,
+powershell -ExecutionPolicy Bypass -File C:\defend.ps1
+
+Locking the file in Linux Kernel
+# Bind mount + remount ro (as before)
+mount --bind /root/king.txt /root/king.txt
+mount -o remount,ro,bind /root/king.txt
+
+# Then restrict who can umount by dropping CAP_SYS_ADMIN from other users
+# (only helps if there are non-root users you don't trust)   
+
+`,
         },
       ];
 
